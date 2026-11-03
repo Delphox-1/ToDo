@@ -2,9 +2,9 @@
 
 [한국어](../README.md) | **日本語** | [English](README.en.md)
 
-タスク、週間スケジュール、カレンダー、プロジェクトを管理する個人向けプランナーです。**パソコンにダウンロードして実行**するほか、**自分のGitHub Pagesサイトを作り、スマートフォンのホーム画面に追加**することもできます。予定は使用中のブラウザーに保存されます。
+タスク、週間スケジュール、カレンダー、プロジェクトを管理する個人向けプランナーです。**自分のサーバーとDBにデプロイすると、ログインしてPCとスマートフォン間で自動同期**できます。各サイトのアカウントとデータは独立しています。
 
-開発者の運用サイトには接続しません。ログイン、クラウドアカウント、DB、秘密鍵の設定は不要です。追加パッケージのインストールやビルドも必要ありません。
+開発者の運用サイトには接続しません。ログインや自動同期が必要なら **個人サーバーへのデプロイ** を選んでください。ログイン不要のPC・Pagesモードも別途利用できます。
 
 ## 主な機能
 
@@ -13,6 +13,30 @@
 - 繰り返しの予定とタスク検索
 - JSONファイルによるバックアップと復元
 - 韓国・日本の祝日表示
+
+## 推奨：自分のサーバーでログインと自動同期を使う
+
+自分のCloudflareアカウントに **WorkersとD1** をデプロイすると、パソコンとスマートフォンで同じURL・アカウントを使って予定を同期できます。開発者の運用サイトとは別の構成です。
+
+**[個人サーバーへのデプロイ手順 — 登録・ログイン・同期・スマートフォン](SELF_HOSTED.ja.md)**
+
+| 利用方法 | ログイン・サーバー保存 | PC・スマートフォン間の自動同期 | 必要なもの |
+| --- | --- | --- | --- |
+| **個人サーバー — 推奨** | 対応 | 対応 | 自分のCloudflareアカウント、Worker、D1、設定 |
+| PCローカル | なし | なし | パソコンとNode.js |
+| GitHub Pages | なし | なし | GitHubアカウントとPages設定 |
+
+初回にサーバー、DB、URL、シークレットを設定する必要があります。ダウンロードやForkだけではサーバーは作成されません。ChatGPT専用ログインは独立版に含まれず、ToDo独自のアカウントを使います。Google認証は自分のOAuthキーで追加できます。
+
+### 同期モードをローカルで確認
+
+```sh
+npm ci
+npm run setup:sync
+npm run dev:sync
+```
+
+[http://127.0.0.1:8787](http://127.0.0.1:8787) を開きます。これはPC上の確認用です。スマートフォンから使うには、上記の公開手順を完了してください。
 
 ## 方法1：パソコンにダウンロードして実行する
 
@@ -37,7 +61,7 @@ cd ToDo
 
 ### 3. 起動
 
-**Windows:** 展開したフォルダー内の `Start-ToDo.cmd` をダブルクリックします。アプリの使用中は、開いたコマンドウィンドウを閉じないでください。
+**Windows:** 展開したフォルダー内の `Start-Local.cmd` をダブルクリックします。アプリの使用中は、開いたコマンドウィンドウを閉じないでください。
 
 **Windows・macOS・Linux共通:** `package.json` があるフォルダーでターミナルを開き、次のコマンドを実行します。
 
@@ -45,7 +69,7 @@ cd ToDo
 node scripts/local-server.mjs
 ```
 
-Node.jsに付属するnpmを使う場合は、`npm start` でも起動できます。**`npm install`、`npm ci`、ビルドは不要です。**
+Node.jsに付属するnpmを使う場合は、`npm run start:local` でも起動できます。**`npm install`、`npm ci`、ビルドは不要です。**
 
 ### 4. ブラウザーで使う
 
@@ -129,7 +153,7 @@ https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/
 
 公式ガイド：[GitHub Pagesの設定](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)、[iPhoneのホーム画面に追加](https://support.apple.com/en-lamr/guide/iphone/iphea86e5236/ios)、[AndroidでWebアプリをインストール](https://support.google.com/chrome/answer/9658361?hl=ja&co=GENIE.Platform%3DAndroid)。
 
-## データ保存とバックアップ
+## PCローカル・GitHub Pagesモードのデータ保存とバックアップ
 
 - 予定はサーバーではなく、**使用中のブラウザーのlocalStorage**に保存されます。開発者には送信されません。
 - 別のブラウザー、プロファイル、パソコンには自動で同期されません。

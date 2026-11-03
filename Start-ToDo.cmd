@@ -6,5 +6,5 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-node scripts\local-server.mjs
+node scripts\run-sync.mjs dev
 pause

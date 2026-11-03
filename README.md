@@ -2,9 +2,9 @@
 
 **한국어** | [日本語](docs/README.ja.md) | [English](docs/README.en.md)
 
-할 일, 주간 계획, 캘린더와 프로젝트를 관리하는 개인 플래너입니다. **PC에서 내려받아 실행**하거나, **본인의 GitHub Pages 웹사이트를 만들어 휴대폰 홈 화면에 추가**할 수 있습니다. 일정은 사용하는 브라우저에 저장됩니다.
+할 일, 주간 계획, 캘린더와 프로젝트를 관리하는 개인 플래너입니다. **각자의 서버·DB에 배포하면 원본처럼 로그인하고 PC·폰에서 자동 동기화**할 수 있습니다. 각 배포의 계정과 데이터는 독립적으로 관리됩니다.
 
-운영 사이트에 연결하지 않으며, 로그인·클라우드 계정·DB·비밀키 설정이 필요하지 않습니다. 외부 패키지를 설치하거나 빌드할 필요도 없습니다.
+개발자의 운영 사이트에는 연결하지 않습니다. 로그인·자동 동기화가 필요하면 아래의 **개인 서버 배포**를 선택하세요. 로그인 없는 PC·Pages 모드도 별도로 제공됩니다.
 
 ## 주요 기능
 
@@ -13,6 +13,30 @@
 - 반복 일정과 할 일 검색
 - JSON 파일 백업·복원
 - 한국·일본 공휴일 표시
+
+## 권장: 원본처럼 로그인·자동 동기화하며 사용하기
+
+**각자의 Cloudflare Workers 서버와 D1 DB에 배포하는 모드**를 사용하세요. PC와 폰에서 본인의 같은 주소·계정으로 로그인하면 일정이 자동 동기화됩니다. 본인의 원본 운영 사이트와는 분리됩니다.
+
+**[개인 서버 배포 안내 — 회원가입·로그인·자동 동기화·폰 사용](docs/SELF_HOSTED.ko.md)**
+
+| 사용 방식 | 로그인·서버 저장 | PC·폰 자동 동기화 | 필요한 것 |
+| --- | --- | --- | --- |
+| **개인 서버 배포 — 권장** | 지원 | 지원 | 본인 Cloudflare 계정·Worker·D1·설정 |
+| PC 로컬 실행 | 없음 | 없음 | PC와 Node.js |
+| GitHub Pages | 없음 | 없음 | GitHub 계정과 Pages 설정 |
+
+처음 한 번은 각 운영자가 서버·DB·주소·비밀키를 설정해야 합니다. 다운로드나 Fork만으로 서버가 자동 생성되지는 않습니다. ChatGPT 전용 로그인은 독립 배포에 포함하지 않으며, ToDo 자체 회원가입·로그인을 사용합니다. Google 로그인은 본인의 OAuth 키로 선택 설정할 수 있습니다.
+
+### 동기화 모드 로컬 확인
+
+```sh
+npm ci
+npm run setup:sync
+npm run dev:sync
+```
+
+[http://127.0.0.1:8787](http://127.0.0.1:8787)을 엽니다. 이 단계는 PC용 로컬 검증이며, 폰에서 접속하려면 위 배포 안내를 완료해야 합니다.
 
 ## 방법 1. PC에서 내려받아 실행하기
 
@@ -37,7 +61,7 @@ cd ToDo
 
 ### 3. 실행
 
-**Windows:** 압축을 푼 폴더의 `Start-ToDo.cmd`를 더블클릭하세요. 열린 명령 창은 앱을 사용하는 동안 유지합니다.
+**Windows:** 압축을 푼 폴더의 `Start-Local.cmd`를 더블클릭하세요. 열린 명령 창은 앱을 사용하는 동안 유지합니다.
 
 **Windows·macOS·Linux 공통:** `package.json`이 있는 폴더에서 터미널을 열고 실행합니다.
 
@@ -45,7 +69,7 @@ cd ToDo
 node scripts/local-server.mjs
 ```
 
-Node.js와 함께 설치된 npm을 사용하는 경우 `npm start`로 실행해도 됩니다. **`npm install`, `npm ci`, 빌드 작업은 필요하지 않습니다.**
+Node.js와 함께 설치된 npm을 사용하는 경우 `npm run start:local`로 실행해도 됩니다. **`npm install`, `npm ci`, 빌드 작업은 필요하지 않습니다.**
 
 ### 4. 브라우저에서 사용
 
@@ -129,7 +153,7 @@ https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/
 
 공식 안내: [GitHub Pages 설정](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site), [iPhone 홈 화면에 추가](https://support.apple.com/en-lamr/guide/iphone/iphea86e5236/ios), [Android 웹 앱 설치](https://support.google.com/chrome/answer/9658361?hl=ko&co=GENIE.Platform%3DAndroid).
 
-## 데이터 저장과 백업
+## PC 로컬·GitHub Pages 모드의 데이터 저장과 백업
 
 - 일정은 서버가 아니라 **현재 브라우저의 localStorage**에 저장됩니다. 개발자에게 전송되지 않습니다.
 - 다른 브라우저·프로필·컴퓨터에는 자동으로 동기화되지 않습니다.

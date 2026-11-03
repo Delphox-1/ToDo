@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <title>ToDo</title>
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="application-name" content="ToDo" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="ToDo" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="icon" type="image/svg+xml" href="/planner/favicon.svg?v=todo" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/planner/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" crossorigin="use-credentials" />
+    <link rel="stylesheet" href="/auth-ui/style.css" />
+  </head>
+  <body>
+    <main>
+      <a class="brand" href="/">📅 ToDo</a>
+      <h1 id="form-title">로그인</h1>
+      <p class="intro">나의 할 일과 일정을 이어서 관리하세요.</p>
+      <nav aria-label="계정 메뉴">
+        <button id="login-tab" aria-pressed="true">로그인</button
+        ><button id="signup-tab" aria-pressed="false">회원가입</button>
+      </nav>
+      <form id="account-form" novalidate>
+        <div id="name-field" hidden>
+          <label for="name">이름</label
+          ><input
+            id="name"
+            name="name"
+            autocomplete="name"
+            maxlength="30"
+            aria-describedby="name-help"
+          /><small id="name-help">문자 1~30자. 이모티콘·공백 불가</small>
+        </div>
+
+        <label for="username">아이디</label
+        ><input
+          id="username"
+          name="username"
+          autocomplete="username"
+          autocapitalize="none"
+          spellcheck="false"
+          required
+          aria-describedby="username-help"
+        /><small id="username-help">한글·영어·일본어·한자·숫자, 1~20자</small
+        ><label for="password">비밀번호</label>
+        <div class="password-row">
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            maxlength="64"
+            required
+            aria-describedby="password-help"
+          /><button type="button" id="show-password" aria-label="비밀번호 표시">
+            보기
+          </button>
+        </div>
+        <small id="password-help" hidden
+          >영문·숫자·특수문자 모두 포함, 10~64자. 이모티콘·공백 불가</small
+        >
+        <div id="password-confirm-field" hidden>
+          <label for="passwordConfirm">비밀번호 확인</label>
+          <input
+            id="passwordConfirm"
+            name="passwordConfirm"
+            type="password"
+            autocomplete="new-password"
+            maxlength="64"
+            aria-describedby="password-confirm-help"
+          />
+          <small id="password-confirm-help"
+            >위 비밀번호와 똑같이 한 번 더 입력해 주세요.</small
+          >
+        </div>
+        <p id="form-error" role="alert"></p>
+        <button type="submit" id="submit-button" class="primary">로그인</button>
+      </form>
+      <div class="divider">또는</div>
+      <button id="google-login" class="google" disabled>
+        Google로 계속하기
+      </button>
+      <p class="help">
+        아이디로 가입한 계정과 함께 쓰려면, 먼저 아이디로 로그인한 뒤 계정
+        관리에서 Google 계정을 연결하세요.
+      </p>
+      <p id="google-status" class="help" role="status"></p>
+      <p class="help" id="recovery-note" hidden>
+        이메일·전화번호를 받지 않으므로 아이디와 비밀번호를 보관해 주세요. 자동
+        계정 찾기는 제공하지 않습니다.
+      </p>
+    </main>
+    <script src="/planner/account-rules.js"></script>
+    <script src="/auth-ui/app.js"></script>
+  </body>
+</html>

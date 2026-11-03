@@ -1,16 +1,33 @@
 {
-  "name": "todo1-local-planner",
+  "name": "todo-personal-planner",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "A personal planner that runs locally without accounts, cloud services, or third-party packages.",
+  "description": "Personal planner with independent self-hosted accounts and sync, plus optional local and Pages modes.",
   "engines": {
     "node": ">=22.13.0"
   },
   "scripts": {
-    "start": "node scripts/local-server.mjs",
-    "dev": "node scripts/local-server.mjs",
+    "start": "node scripts/run-sync.mjs dev",
+    "dev": "node scripts/run-sync.mjs dev",
     "test": "node --test tests/*.test.cjs tests/*.test.mjs",
-    "build:pages": "node scripts/build-pages.mjs"
+    "build:pages": "node scripts/build-pages.mjs",
+    "setup:sync": "node scripts/run-sync.mjs setup",
+    "dev:sync": "node scripts/run-sync.mjs dev",
+    "db:sync:local": "node scripts/run-sync.mjs migrate-local",
+    "db:sync:remote": "node scripts/run-sync.mjs migrate-remote",
+    "deploy:sync": "node scripts/run-sync.mjs deploy",
+    "check:sync": "tsc --noEmit --project self-hosted/tsconfig.json && node scripts/run-sync.mjs dry-run",
+    "start:local": "node scripts/local-server.mjs",
+    "typecheck:sync": "tsc --noEmit --project self-hosted/tsconfig.json"
+  },
+  "dependencies": {
+    "better-auth": "1.7.15",
+    "drizzle-orm": "0.45.2"
+  },
+  "devDependencies": {
+    "wrangler": "4.92.0",
+    "typescript": "5.9.3",
+    "@cloudflare/workers-types": "4.20260515.1"
   }
 }

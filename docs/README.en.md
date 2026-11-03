@@ -2,9 +2,9 @@
 
 [한국어](../README.md) | [日本語](README.ja.md) | **English**
 
-A personal planner with tasks, weekly schedules, a calendar, and projects. **Download and run it on your PC**, or **create your own GitHub Pages website and add it to your phone's home screen**. Your plans stay in the browser you use.
+A personal planner with tasks, weekly schedules, a calendar, and projects. **Deploy your own server and database for sign-in and automatic sync between your PC and phone.** Each deployment manages its own independent accounts and data.
 
-It does not connect to the developer's live site. No sign-in, cloud account, database, or secret keys are required. There are no third-party packages to install and no build step.
+It does not connect to the developer's live site. Choose **self-hosted deployment** for sign-in and automatic sync. Separate PC-local and Pages modes remain available without sign-in.
 
 ## Features
 
@@ -13,6 +13,30 @@ It does not connect to the developer's live site. No sign-in, cloud account, dat
 - Recurring events and task search
 - JSON backup and restore
 - Korean and Japanese public holidays
+
+## Recommended: Sign-in and automatic sync on your own server
+
+Deploy **Cloudflare Workers and D1 in your own account** to sign in with the same URL and ToDo account on your PC and phone and sync your plans. This is separate from the developer's live service.
+
+**[Self-hosting guide — sign-up, sign-in, sync, and phone access](SELF_HOSTED.en.md)**
+
+| Mode | Sign-in and server storage | Automatic PC/phone sync | Requirements |
+| --- | --- | --- | --- |
+| **Own server — recommended** | Yes | Yes | Your Cloudflare account, Worker, D1, and configuration |
+| PC-local | No | No | PC and Node.js |
+| GitHub Pages | No | No | GitHub account and Pages settings |
+
+Each operator must configure the server, database, URL, and secret once. Downloading or forking does not create a server automatically. ChatGPT-specific sign-in is not included in independent deployment; use a ToDo account. Add Google sign-in with your own OAuth credentials if desired.
+
+### Try sync mode locally
+
+```sh
+npm ci
+npm run setup:sync
+npm run dev:sync
+```
+
+Open [http://127.0.0.1:8787](http://127.0.0.1:8787). This only tests the app on your PC. Complete the deployment guide above for phone access.
 
 ## Option 1: Download and run on your PC
 
@@ -37,7 +61,7 @@ cd ToDo
 
 ### 3. Start the app
 
-**Windows:** Double-click `Start-ToDo.cmd` in the extracted folder. Keep the command window open while using the app.
+**Windows:** Double-click `Start-Local.cmd` in the extracted folder. Keep the command window open while using the app.
 
 **Windows, macOS, and Linux:** Open a terminal in the folder containing `package.json` and run:
 
@@ -45,7 +69,7 @@ cd ToDo
 node scripts/local-server.mjs
 ```
 
-You can also use `npm start` if you prefer the npm command included with Node.js. **You do not need to run `npm install`, `npm ci`, or a build.**
+You can also use `npm run start:local` if you prefer the npm command included with Node.js. **You do not need to run `npm install`, `npm ci`, or a build.**
 
 ### 4. Open the planner
 
@@ -129,7 +153,7 @@ Menu labels and whether the result opens as an app or a shortcut depend on your 
 
 Official guides: [Configure GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site), [Add a website to an iPhone home screen](https://support.apple.com/en-lamr/guide/iphone/iphea86e5236/ios), [Install a web app on Android](https://support.google.com/chrome/answer/9658361?hl=en&co=GENIE.Platform%3DAndroid).
 
-## Storage and backups
+## Storage and backups in PC-local and GitHub Pages modes
 
 - Plans are stored in **your browser's localStorage**, not on a server. They are not sent to the developer.
 - Data does not sync automatically across browsers, profiles, or computers.

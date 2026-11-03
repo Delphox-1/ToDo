@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ToDo 계정 관리</title>
+    <link rel="stylesheet" href="/auth-ui/style.css" />
+  </head>
+  <body>
+    <main>
+      <a class="brand" href="/">📅 ToDo</a>
+      <h1>계정 관리</h1>
+      <p id="account-name" class="intro"></p>
+      <button id="logout" class="google">로그아웃</button>
+      <section id="google-section" hidden>
+        <hr />
+        <h2>Google 계정 연결</h2>
+        <p id="google-link-status" class="help" role="status"></p>
+        <form id="google-link-form" hidden>
+          <p class="help">
+            연결하면 아이디·비밀번호와 Google 로그인 모두 같은 일정을
+            사용합니다. 현재 비밀번호를 확인한 뒤 연결할 Google 계정을
+            선택하세요.
+          </p>
+          <label for="google-link-password">현재 비밀번호</label>
+          <input
+            id="google-link-password"
+            type="password"
+            autocomplete="current-password"
+            maxlength="64"
+            required
+          />
+          <p id="google-link-error" role="alert" class="help"></p>
+          <button class="google" type="submit">Google 계정 연결하기</button>
+        </form>
+      </section>
+      <hr />
+      <h2>회원탈퇴</h2>
+      <p class="help">
+        탈퇴하면 이 계정의 모든 일정, 프로젝트, 메모, 휴지통과 로그인 정보가
+        영구 삭제됩니다. 다시 가입해도 복구되지 않습니다.
+      </p>
+      <p class="help">
+        기기에 따로 내려받은 백업 파일과 이전 계정의 기록은 삭제 대상에 포함되지
+        않습니다.
+      </p>
+      <form id="delete-form">
+        <div id="password-field">
+          <label for="password">현재 비밀번호</label
+          ><input
+            id="password"
+            type="password"
+            maxlength="64"
+            autocomplete="current-password"
+          />
+        </div>
+        <label for="confirmation">확인을 위해 ‘회원탈퇴’를 입력해 주세요.</label
+        ><input id="confirmation" autocomplete="off" required />
+        <p id="form-error" role="alert"></p>
+        <button class="primary" style="background: #c63838" type="submit">
+          모든 내용 삭제하고 탈퇴
+        </button>
+      </form>
+      <a class="legacy" href="/">돌아가기</a>
+    </main>
+    <script src="/planner/account-session.js"></script>
+    <script src="/auth-ui/manage.js"></script>
+  </body>
+</html>
