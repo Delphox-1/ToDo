@@ -49,7 +49,7 @@ You can also use `npm start` if you prefer the npm command included with Node.js
 
 ### 4. Open the planner
 
-Visit **http://127.0.0.1:4173** in your browser and add a task. No sign-in or registration is needed.
+Visit [http://127.0.0.1:4173](http://127.0.0.1:4173) in your browser and add a task. No sign-in or registration is needed.
 
 Close the terminal or press **Ctrl+C** to stop the server. Start it again and use the **same browser and URL** to see your saved plans. Open the local URL above rather than double-clicking the HTML file.
 
@@ -76,7 +76,7 @@ Close the terminal or press **Ctrl+C** to stop the server. Start it again and us
 node scripts/local-server.mjs --port 4174
 ```
 
-Then open **http://127.0.0.1:4174**. Different ports have separate browser storage. To access your previous plans, return to the original port or import a backup.
+Then open [http://127.0.0.1:4174](http://127.0.0.1:4174). Different ports have separate browser storage. To access your previous plans, return to the original port or import a backup.
 
 ## Development and testing
 
