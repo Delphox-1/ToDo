@@ -7,7 +7,7 @@
     busy = false,
     timer = null,
     dirty = false;
-  const cloud = { status: "서버 연결 중", ready: null, changed, sync };
+  const cloud = { status: ToDoI18n.t("서버 연결 중"), ready: null, changed, sync };
   globalThis.HaruCloud = cloud;
   const empty = () => ({
       version: 1,
@@ -63,14 +63,14 @@
     busy = true;
     dirty = false;
     try {
-      status("동기화 중");
+      status(ToDoI18n.t("동기화 중"));
       for (let attempt = 0; attempt < 4; attempt++) {
         const remote = await request("GET"),
           mine = local(),
           remoteState = remote.state ? HaruCore.validate(remote.state) : null;
         if (!mine && !remoteState) {
           remember(empty(), 0);
-          status("서버 연결됨");
+          status(ToDoI18n.t("서버 연결됨"));
           return;
         }
         const mergeMine =
@@ -93,7 +93,7 @@
         if (remoteState && equal(merged, remoteState)) {
           remember(remoteState, remote.revision);
           apply(remoteState);
-          status("모든 기기 동기화 완료");
+          status(ToDoI18n.t("모든 기기 동기화 완료"));
           return;
         }
         const sent = HaruCore.validate(merged),
@@ -109,16 +109,16 @@
         apply(after);
         if (!equal(after, sent)) {
           setTimeout(sync, 20);
-          status("동기화 중");
-        } else status("모든 기기 동기화 완료");
+          status(ToDoI18n.t("동기화 중"));
+        } else status(ToDoI18n.t("모든 기기 동기화 완료"));
         return;
       }
       throw Error("conflict");
     } catch (error) {
       status(
         error.message === "login"
-          ? "로그인 필요 · 기기에 임시 저장"
-          : "연결 대기 · 기기에 임시 저장",
+          ? ToDoI18n.t("로그인 필요 · 기기에 임시 저장")
+          : ToDoI18n.t("연결 대기 · 기기에 임시 저장"),
       );
     } finally {
       busy = false;
@@ -131,7 +131,7 @@
   function changed() {
     dirty = true;
     clearTimeout(timer);
-    status("동기화 중");
+    status(ToDoI18n.t("동기화 중"));
     timer = setTimeout(sync, 350);
   }
   try {

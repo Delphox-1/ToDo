@@ -16,7 +16,7 @@
       $("#delete-form").hidden = true;
       $("#logout").hidden = true;
       $("#form-error").textContent =
-        "새로 가입한 ToDo 계정에서 사용할 수 있습니다.";
+        ToDoI18n.t("새로 가입한 ToDo 계정에서 사용할 수 있습니다.");
       return;
     }
     $("#google-section").hidden = false;
@@ -24,20 +24,20 @@
       data.googleEnabled && data.passwordRequired && !data.googleLinked;
     $("#google-link-form").hidden = !canLink;
     $("#google-link-status").textContent = data.googleLinked
-      ? "Google 계정이 연결돼 있습니다. 두 로그인 방식으로 같은 기록을 사용할 수 있습니다."
+      ? ToDoI18n.t("Google 계정이 연결돼 있습니다. 두 로그인 방식으로 같은 기록을 사용할 수 있습니다.")
       : !data.googleEnabled
-        ? "Google 로그인 설정을 확인해 주세요."
+        ? ToDoI18n.t("Google 로그인 설정을 확인해 주세요.")
         : data.passwordRequired
-          ? "아직 Google 계정이 연결되지 않았습니다."
-          : "Google로 로그인한 계정입니다.";
+          ? ToDoI18n.t("아직 Google 계정이 연결되지 않았습니다.")
+          : ToDoI18n.t("Google로 로그인한 계정입니다.");
     const params = new URLSearchParams(location.search);
     if (params.get("google") === "error" || params.has("error"))
       $("#google-link-error").textContent =
-        "Google 계정을 연결하지 못했습니다. 다른 ToDo 계정에 이미 연결된 Google 계정은 연결할 수 없습니다. 기존 기록은 변경되지 않았습니다.";
+        ToDoI18n.t("Google 계정을 연결하지 못했습니다. 다른 ToDo 계정에 이미 연결된 Google 계정은 연결할 수 없습니다. 기존 기록은 변경되지 않았습니다.");
     $("#password-field").hidden = !data.passwordRequired;
     $("#password").required = data.passwordRequired;
   } catch {
-    $("#form-error").textContent = "계정 정보를 불러오지 못했습니다.";
+    $("#form-error").textContent = ToDoI18n.t("계정 정보를 불러오지 못했습니다.");
     return;
   }
   const sessions = ToDoSession.create(
@@ -74,7 +74,7 @@
       });
       const data = await r.json();
       if (!r.ok)
-        throw Error(data.message || "Google 연결을 시작하지 못했습니다.");
+        throw Error(data.message || ToDoI18n.t("Google 연결을 시작하지 못했습니다."));
       if (!data.url) throw Error("Google 연결 주소를 불러오지 못했습니다.");
       const url = new URL(data.url);
       if (url.protocol !== "https:" || url.hostname !== "accounts.google.com")
@@ -82,7 +82,7 @@
       $("#google-link-password").value = "";
       location.assign(url.href);
     } catch (error) {
-      $("#google-link-error").textContent = error.message;
+      $("#google-link-error").textContent = ToDoI18n.t(error.message);
       button.disabled = false;
       busy = false;
     }
@@ -104,7 +104,7 @@
       location.replace("/login");
     } catch {
       $("#form-error").textContent =
-        "로그아웃하지 못했습니다. 다시 시도해 주세요.";
+        ToDoI18n.t("로그아웃하지 못했습니다. 다시 시도해 주세요.");
       busy = false;
     }
   };
@@ -113,7 +113,7 @@
     if (busy) return;
     const confirmation = $("#confirmation").value;
     if (confirmation !== "회원탈퇴") {
-      $("#form-error").textContent = "회원탈퇴를 정확히 입력해 주세요.";
+      $("#form-error").textContent = ToDoI18n.t("회원탈퇴를 정확히 입력해 주세요.");
       return;
     }
     busy = true;
@@ -129,11 +129,11 @@
         body: JSON.stringify({ confirmation, password: $("#password").value }),
       });
       const data = await r.json();
-      if (!r.ok) throw Error(data.message || "탈퇴하지 못했습니다.");
+      if (!r.ok) throw Error(data.message || ToDoI18n.t("탈퇴하지 못했습니다."));
       clearAccount(true);
-      location.replace("/login%3Fdeleted%3D1");
+      location.replace("/login?deleted=1");
     } catch (error) {
-      $("#form-error").textContent = error.message;
+      $("#form-error").textContent = ToDoI18n.t(error.message);
       busy = false;
       button.disabled = false;
     }

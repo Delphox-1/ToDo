@@ -39,12 +39,12 @@
     actions.className = "account-actions";
     const button = document.createElement("button");
     button.className = "secondary account-button";
-    button.textContent = `${user.username || user.name} 님`;
-    button.title = "계정 관리";
+    button.textContent = ToDoI18n.html`${user.username || user.name} 님`;
+    button.title = ToDoI18n.t("계정 관리");
     button.onclick = () => location.assign("/account");
     const logout = document.createElement("button");
     logout.className = "secondary logout-button";
-    logout.textContent = "로그아웃";
+    logout.textContent = ToDoI18n.t("로그아웃");
     logout.onclick = async () => {
       logout.disabled = true;
       try {
@@ -65,21 +65,21 @@
         location.replace("/login");
       } catch {
         logout.disabled = false;
-        logout.textContent = "로그아웃 재시도";
+        logout.textContent = ToDoI18n.t("로그아웃 재시도");
       }
     };
-    actions.append(button, logout);
+    actions.append(document.querySelector(".language-picker") || ToDoI18n.createPicker(), button, logout);
     document.querySelector(".topbar-actions").prepend(actions);
   } catch {
     const main = document.querySelector("#main");
     main.replaceChildren();
     const p = document.createElement("p");
     p.textContent =
-      "연결을 확인한 뒤 다시 열어 주세요. 저장된 기록은 기기에 유지됩니다.";
+      ToDoI18n.t("연결을 확인한 뒤 다시 열어 주세요. 저장된 기록은 기기에 유지됩니다.");
     main.append(p);
     const b = document.createElement("button");
     b.className = "primary";
-    b.textContent = "다시 시도";
+    b.textContent = ToDoI18n.t("다시 시도");
     b.onclick = () => location.reload();
     main.append(b);
   }

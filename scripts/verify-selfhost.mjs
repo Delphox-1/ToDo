@@ -23,8 +23,8 @@ function client() {
       let data; try { data=JSON.parse(text); } catch {data=text;}
       return {status:response.status, data, headers:response.headers};
     },
-    async put(state, revision) {
-      const response=await fetch(origin+"/api/planner", {method:"PUT",headers:{Origin:origin,"Content-Type":"application/json",Cookie:[...cookies].map(([k,v])=>k+"="+v).join("; "),"X-ToDo-Account":this.id},body:JSON.stringify({state,revision})});
+    async put(state, revision, extraHeaders = {}) {
+      const response=await fetch(origin+"/api/planner", {method:"PUT",headers:{Origin:origin,"Content-Type":"application/json",Cookie:[...cookies].map(([k,v])=>k+"="+v).join("; "),"X-ToDo-Account":this.id,...extraHeaders},body:JSON.stringify({state,revision})});
       return {status:response.status,data:await response.json()};
     }
   };
@@ -51,6 +51,16 @@ try {
   assert.equal((await a.call("/")).status,200,"authenticated app entry must not redirect in a loop");
   assert.equal((await a.call("/account")).status,200,"account page is served at its canonical route");
   assert.equal((await anonymous.call("/login")).status,200,"login page is served without an asset redirect");
+  const app=await a.call("/");
+  const login=await anonymous.call("/login");
+  for(const page of [app.data,login.data]) {
+    assert.ok(page.includes("/planner/i18n-core.js") && page.includes("/planner/i18n.js"));
+    for(const [,asset] of page.matchAll(/(?:src|href)="(\/[^"#?]+\.(?:css|js))"/g)) assert.equal((await anonymous.call(asset)).status,200,asset);
+  }
+  for(const name of ["holidays","core","merge","cloud","app","install"]) assert.equal((await anonymous.call("/planner/"+name+".js")).status,200,name);
+  assert.equal((await a.call("/api/account/logout",{}, {Origin:"https://untrusted.example"})).status,403,"cross-origin logout is rejected");
+  assert.equal((await a.call("/api/account/logout",{}, {"X-ToDo-Account":b.id})).status,409,"stale tabs cannot log out the wrong account");
+  assert.equal((await a.call("/api/auth/unlink-account",{})).status,403,"unguarded unlink requests are blocked");
   const state={version:1,tasks:[],projects:[],trash:[],notes:{"2026-11-03":"PC fixture note"}};
   const saved=await a.put(state,0);
   assert.equal(saved.status,200,JSON.stringify(saved.data));
@@ -59,6 +69,9 @@ try {
   state.notes["2026-11-03"]="Phone fixture note";
   const updated=await phone.put(state,seen.data.revision);
   assert.equal(updated.status,200);
+  assert.equal((await a.put(state,updated.data.revision,{Origin:"https://untrusted.example"})).status,403,"cross-origin planner writes are rejected");
+  assert.equal((await a.put(state,-1)).status,400,"negative revisions are rejected");
+  assert.equal((await a.put({...state,tasks:[null]},updated.data.revision)).status,400,"invalid model data cannot replace saved plans");
   assert.equal((await a.call("/api/planner")).data.state.notes["2026-11-03"],"Phone fixture note");
   assert.equal((await b.call("/api/planner")).data.state,null,"other accounts cannot read the plans");
   assert.equal((await a.put(state,1)).status,409,"stale writes do not overwrite newer data");
@@ -71,7 +84,7 @@ try {
   assert.equal((await b.call("/api/account/delete",{confirmation:"회원탈퇴",password})).status,200);
   assert.equal((await b.call("/api/planner")).status,401,"deleted account session is revoked");
   assert.equal((await a.call("/api/planner")).data.state.notes["2026-11-03"],"Phone fixture note");
-  console.log("PASS: signup, two-device login, bidirectional sync, account isolation, stale-write conflict, logout and deletion.");
+  console.log("PASS: language assets, signup, two-device login, bidirectional sync, account isolation, CSRF, malformed writes, conflict, logout and deletion.");
 } finally {
   await a.call("/api/account/delete",{confirmation:"회원탈퇴",password});
   await b.call("/api/account/delete",{confirmation:"회원탈퇴",password});

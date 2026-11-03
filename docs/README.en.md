@@ -14,6 +14,12 @@ It does not connect to the developer's live site. Choose **self-hosted deploymen
 - JSON backup and restore
 - Korean and Japanese public holidays
 
+## Interface language: 한국어 / 日本語
+
+Use the **globe language button → 한국어 or 日本語** to switch the interface. The setting applies to sign-in, sign-up, account management, and planner screens. On narrow phone screens, the button may show only the globe icon.
+
+Your choice is saved in the current browser and persists after a reload. Each device can use a different language. **Task titles, project names, and notes you enter are never translated or changed.** Switching languages reloads the page, so save any unfinished edits first.
+
 ## Recommended: Sign-in and automatic sync on your own server
 
 Deploy **Cloudflare Workers and D1 in your own account** to sign in with the same URL and ToDo account on your PC and phone and sync your plans. This is separate from the developer's live service.

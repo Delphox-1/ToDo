@@ -2,7 +2,7 @@
   const $ = (s) => document.querySelector(s);
   if (new URLSearchParams(location.search).get("deleted") === "1")
     $(".intro").textContent =
-      "회원탈퇴가 완료됐습니다. 이 계정의 내용이 삭제됐습니다.";
+      ToDoI18n.t("회원탈퇴가 완료됐습니다. 이 계정의 내용이 삭제됐습니다.");
   // Keyboard, paste, autofill and mobile/IME input all use the same rule.
   const fields = ['username', 'password', 'passwordConfirm', 'name'].map(id => $('#' + id));
   function removeSpaces(input) {
@@ -29,12 +29,30 @@
     input.addEventListener('compositionend', () => removeSpaces(input));
   });
   let signup = false,
-    busy = false;
+    busy = false,
+    googleEnabled = false,
+    retryUntil = 0;
+  const coolingDown = () => Date.now() < retryUntil;
+  function updateActions() {
+    const disabled = busy || coolingDown();
+    $("#submit-button").disabled = disabled;
+    $("#google-login").disabled = disabled || !googleEnabled;
+  }
+  function waitBeforeRetry(response) {
+    const requested = Number(response.headers?.get("X-Retry-After") || response.headers?.get("Retry-After"));
+    const seconds = Number.isFinite(requested) && requested > 0 ? Math.min(Math.ceil(requested), 300) : 60;
+    retryUntil = Date.now() + seconds * 1000;
+    updateActions();
+    setTimeout(updateActions, seconds * 1000 + 50);
+    return ToDoI18n.language === 'ja'
+      ? `リクエストが集中しています。約${seconds}秒後にもう一度お試しください。`
+      : `요청이 많습니다. 약 ${seconds}초 후 다시 시도해 주세요.`;
+  }
   function mode(value) {
     if (busy) return;
     signup = value;
-    $("#form-title").textContent = signup ? "회원가입" : "로그인";
-    $("#submit-button").textContent = signup ? "가입하기" : "로그인";
+    $("#form-title").textContent = signup ? ToDoI18n.t("회원가입") : ToDoI18n.t("로그인");
+    $("#submit-button").textContent = signup ? ToDoI18n.t("가입하기") : ToDoI18n.t("로그인");
     $("#login-tab").setAttribute("aria-pressed", String(!signup));
     $("#signup-tab").setAttribute("aria-pressed", String(signup));
     $("#name-field").hidden = !signup;
@@ -57,18 +75,19 @@
   $("#show-password").onclick = () => {
     const p = $("#password");
     p.type = p.type === "password" ? "text" : "password";
-    $("#show-password").textContent = p.type === "password" ? "보기" : "숨기기";
+    $("#show-password").textContent = p.type === "password" ? ToDoI18n.t("보기") : ToDoI18n.t("숨기기");
     $("#show-password").setAttribute(
       "aria-label",
-      p.type === "password" ? "비밀번호 표시" : "비밀번호 숨기기",
+      p.type === "password" ? ToDoI18n.t("비밀번호 표시") : ToDoI18n.t("비밀번호 숨기기"),
     );
   };
   const messages = {
-    USER_ALREADY_EXISTS: "이미 사용 중인 아이디입니다.",
-    USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: "이미 사용 중인 아이디입니다.",
-    USERNAME_IS_ALREADY_TAKEN: "이미 사용 중인 아이디입니다.",
-    INVALID_USERNAME_OR_PASSWORD: "아이디 또는 비밀번호를 확인해 주세요.",
-    INVALID_EMAIL_OR_PASSWORD: "아이디 또는 비밀번호를 확인해 주세요.",
+    USER_ALREADY_EXISTS: ToDoI18n.t("이미 사용 중인 아이디입니다."),
+    USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: ToDoI18n.t("이미 사용 중인 아이디입니다."),
+    USERNAME_IS_ALREADY_TAKEN: ToDoI18n.t("이미 사용 중인 아이디입니다."),
+    INVALID_USERNAME_OR_PASSWORD: ToDoI18n.t("아이디 또는 비밀번호를 확인해 주세요."),
+    INVALID_EMAIL_OR_PASSWORD: ToDoI18n.t("아이디 또는 비밀번호를 확인해 주세요."),
+    INVALID_ORIGIN: ToDoI18n.t("사이트 주소를 확인하고 화면을 새로고침해 주세요."),
   };
   async function request(path, body) {
     const r = await fetch("/api/auth/" + path, {
@@ -77,18 +96,20 @@
       credentials: "same-origin",
       body: JSON.stringify(body),
     });
-    const data = await r.json();
+    let data;
+    try { data = await r.json(); }
+    catch { throw Error(ToDoI18n.t("서버 응답을 읽지 못했습니다. 잠시 후 다시 시도해 주세요.")); }
     if (!r.ok)
       throw Error(
         r.status === 429
-          ? "요청이 많습니다. 잠시 후 다시 시도해 주세요."
-          : messages[data.code] || "입력한 내용을 확인하고 다시 시도해 주세요.",
+          ? waitBeforeRetry(r)
+          : messages[data.code] || ToDoI18n.t("입력한 내용을 확인하고 다시 시도해 주세요."),
       );
     return data;
   }
   $("#account-form").onsubmit = async (event) => {
     event.preventDefault();
-    if (busy) return;
+    if (busy || coolingDown()) return;
     fields.forEach(removeSpaces);
     const data = {
       rememberMe: true,
@@ -107,40 +128,45 @@
       : !data.username || !data.password
         ? {
             field: !data.username ? "username" : "password",
-            message: "아이디와 비밀번호를 입력해 주세요.",
+            message: ToDoI18n.t("아이디와 비밀번호를 입력해 주세요."),
           }
         : null;
     if (error) {
-      $("#form-error").textContent = error.message;
+      $("#form-error").textContent = ToDoI18n.t(error.message);
       $("#" + error.field).setAttribute("aria-invalid", "true");
       $("#" + error.field).focus();
       return;
     }
     busy = true;
-    $("#submit-button").disabled = true;
+    updateActions();
     try {
       await request(signup ? "sign-up/email" : "sign-in/username", data);
       location.replace("/");
     } catch (error) {
-      $("#form-error").textContent = error.message;
+      $("#form-error").textContent = ToDoI18n.t(error.message);
     } finally {
       busy = false;
-      $("#submit-button").disabled = false;
+      updateActions();
     }
   };
   $("#google-login").onclick = async () => {
-    if (busy) return;
+    if (busy || coolingDown()) return;
     busy = true;
+    updateActions();
     try {
       const data = await request("sign-in/social", {
         provider: "google",
         callbackURL: location.origin + "/",
       });
       if (!data.url) throw Error("Google 로그인 주소를 불러오지 못했습니다.");
-      location.assign(data.url);
+      const url = new URL(data.url);
+      if (url.protocol !== 'https:' || url.hostname !== 'accounts.google.com')
+        throw Error(ToDoI18n.t("Google 연결 주소를 확인하지 못했습니다."));
+      location.assign(url.href);
     } catch (error) {
-      $("#form-error").textContent = error.message;
+      $("#form-error").textContent = ToDoI18n.t(error.message);
       busy = false;
+      updateActions();
     }
   };
   function checkSession() {
@@ -154,14 +180,15 @@
           location.replace("/");
           return;
         }
-        $("#google-login").disabled = !data.googleEnabled;
+        googleEnabled = !!data.googleEnabled;
+        updateActions();
         $("#google-status").textContent = data.googleEnabled
           ? ""
-          : "Google 로그인은 연결 설정 후 사용할 수 있습니다.";
+          : ToDoI18n.t("Google 로그인은 연결 설정 후 사용할 수 있습니다.");
       })
       .catch(() => {
         $("#google-status").textContent =
-          "연결 상태를 확인한 뒤 다시 열어 주세요.";
+          ToDoI18n.t("연결 상태를 확인한 뒤 다시 열어 주세요.");
       });
   }
   checkSession();

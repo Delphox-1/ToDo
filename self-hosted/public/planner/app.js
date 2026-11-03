@@ -19,7 +19,7 @@
   const Core = HaruCore;
   const key = globalThis.ToDoAccount?.storageKey || "haru-planner-v1",
     uid = () => crypto.randomUUID(),
-    dayNames = ["일", "월", "화", "수", "목", "금", "토"];
+    dayNames = [ToDoI18n.t("일"), ToDoI18n.t("월"), ToDoI18n.t("화"), ToDoI18n.t("수"), ToDoI18n.t("목"), ToDoI18n.t("금"), ToDoI18n.t("토")];
   const dateKey = (d) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   const parseDate = (s) => new Date(s + "T12:00:00"),
@@ -35,9 +35,9 @@
     return dateKey(d);
   };
   const friendly = (s) => {
-    if (!s) return "날짜 미정";
+    if (!s) return ToDoI18n.t("날짜 미정");
     let d = parseDate(s);
-    return `${d.getMonth() + 1}.${d.getDate()} (${dayNames[d.getDay()]})`;
+    return `${d.getMonth() + 1}${ToDoI18n.language === "ja" ? "/" : "."}${d.getDate()} (${dayNames[d.getDay()]})`;
   };
   let state,
     view = "today",
@@ -181,10 +181,10 @@
   let storageFailed = !!persistence.error;
   function toast(message, undo = "") {
     const el = $("#toast");
-    el.replaceChildren(document.createTextNode(message));
+    el.replaceChildren(document.createTextNode(ToDoI18n.t(message)));
     if (undo) {
       const b = document.createElement("button");
-      b.textContent = "실행 취소";
+      b.textContent = ToDoI18n.t("실행 취소");
       b.dataset.restore = undo;
       el.append(b);
     }
@@ -204,15 +204,15 @@
     };
   const timeLabel = (t) => t.time + (t.endTime ? " – " + t.endTime : "");
   const repeatLabel = (t) =>
-    ({ daily: "매일", weekly: "매주", monthly: "매월", yearly: "매년" })[
+    ({ daily: ToDoI18n.t("매일"), weekly: ToDoI18n.t("매주"), monthly: ToDoI18n.t("매월"), yearly: ToDoI18n.t("매년") })[
       t.repeat
     ] || "";
   const deadlineLabel = (t) =>
     t.dueDate
-      ? "마감 " + friendly(t.dueDate) + (t.dueTime ? " " + t.dueTime : "")
+      ? ToDoI18n.t("마감 ") + friendly(t.dueDate) + (t.dueTime ? " " + t.dueTime : "")
       : "";
   const priority = (t) =>
-    `<span class="priority ${t.priority}">${{ high: "높음", medium: "보통", low: "낮음" }[t.priority]}</span>`;
+    `<span class="priority ${t.priority}">${{ high: ToDoI18n.t("높음"), medium: ToDoI18n.t("보통"), low: ToDoI18n.t("낮음") }[t.priority]}</span>`;
   const matches = (t) =>
     (!query ||
       `${t.title} ${t.notes} ${project(t.project)?.name || ""}`
@@ -233,12 +233,12 @@
           { high: 0, medium: 1, low: 2 }[b.priority],
     );
   function taskRow(t, showDate = false) {
-    return `<div class="task-row ${t.status === "done" ? "done" : ""}"><button class="check ${t.status === "done" ? "checked" : ""}" data-toggle="${esc(t.id)}" aria-label="${esc(t.title)} ${t.status === "done" ? "완료 취소" : "완료"}">${t.status === "done" ? icon("check") : ""}</button><button class="task-text" data-edit="${esc(t.id)}"><span class="task-title">${esc(t.title)}</span><span class="task-meta">${showDate ? `<span>${friendly(t.date)}</span>` : ""}${t.time ? `<span>${timeLabel(t)}</span>` : ""}${pTag(t)}${t.dueDate ? `<span class="deadline-tag">${deadlineLabel(t)}</span>` : ""}${t.status === "doing" ? "<span>진행 중</span>" : ""}${t.repeat !== "none" ? `<span>↻ ${repeatLabel(t)}</span>` : ""}</span></button>${priority(t)}<button class="task-edit" data-edit="${esc(t.id)}" aria-label="${esc(t.title)} 수정" title="수정 및 삭제">수정</button><button class="star ${t.star ? "on" : ""}" data-star="${esc(t.id)}" aria-label="${t.star ? "중요 표시 해제" : "중요한 일로 표시"}" aria-pressed="${t.star}">${icon("star")}</button></div>`;
+    return ToDoI18n.html`<div class="task-row ${t.status === "done" ? "done" : ""}"><button class="check ${t.status === "done" ? "checked" : ""}" data-toggle="${esc(t.id)}" aria-label="${esc(t.title)} ${t.status === "done" ? ToDoI18n.t("완료 취소") : ToDoI18n.t("완료")}">${t.status === "done" ? icon("check") : ""}</button><button class="task-text" data-edit="${esc(t.id)}"><span class="task-title">${esc(t.title)}</span><span class="task-meta">${showDate ? `<span>${friendly(t.date)}</span>` : ""}${t.time ? `<span>${timeLabel(t)}</span>` : ""}${pTag(t)}${t.dueDate ? `<span class="deadline-tag">${deadlineLabel(t)}</span>` : ""}${t.status === "doing" ? ToDoI18n.t("<span>진행 중</span>") : ""}${t.repeat !== "none" ? `<span>↻ ${repeatLabel(t)}</span>` : ""}</span></button>${priority(t)}<button class="task-edit" data-edit="${esc(t.id)}" aria-label="${esc(t.title)} 수정" title="수정 및 삭제">수정</button><button class="star ${t.star ? "on" : ""}" data-star="${esc(t.id)}" aria-label="${t.star ? ToDoI18n.t("중요 표시 해제") : ToDoI18n.t("중요한 일로 표시")}" aria-pressed="${t.star}">${icon("star")}</button></div>`;
   }
-  const empty = (title = "할 일이 없습니다.", desc = "") =>
+  const empty = (title = ToDoI18n.t("할 일이 없습니다."), desc = "") =>
     `<div class="empty">${icon("check")}<strong>${title}</strong>${desc}</div>`;
   const addRow = (date = "") =>
-    `<button class="row-add" data-add-date="${date}">${icon("plus")}할 일 추가하기</button>`;
+    ToDoI18n.html`<button class="row-add" data-add-date="${date}">${icon("plus")}할 일 추가하기</button>`;
   function heading(title) {
     const pageIcons = {
       "오늘의 할 일": "☑️",
@@ -250,16 +250,16 @@
       휴지통: "🗑️",
       더보기: "⚙️",
     };
-    return `<div class="page-heading"><span class="page-icon" aria-hidden="true">${pageIcons[title] || "📄"}</span><h1>${title}</h1></div>`;
+    return `<div class="page-heading"><span class="page-icon" aria-hidden="true">${Object.entries(pageIcons).find(([label]) => ToDoI18n.t(label) === title)?.[1] || "📄"}</span><h1>${title}</h1></div>`;
   }
   function renderNav() {
     const ns = [
-      ["today", "sun", "오늘"],
-      ["all", "check", "전체 할 일"],
-      ["week", "week", "이번 주"],
-      ["calendar", "week", "캘린더"],
-      ["projects", "grid", "프로젝트"],
-      ["completed", "check", "완료한 일"],
+      ["today", "sun", ToDoI18n.t("오늘")],
+      ["all", "check", ToDoI18n.t("전체 할 일")],
+      ["week", "week", ToDoI18n.t("이번 주")],
+      ["calendar", "week", ToDoI18n.t("캘린더")],
+      ["projects", "grid", ToDoI18n.t("프로젝트")],
+      ["completed", "check", ToDoI18n.t("완료한 일")],
     ];
     $("#navigation").innerHTML = ns
       .map(
@@ -268,11 +268,11 @@
       )
       .join("");
     const bottom = [
-        ["today", "sun", "오늘"],
-        ["all", "check", "할 일"],
-        ["week", "week", "이번 주"],
-        ["calendar", "week", "캘린더"],
-        ["more", "more", "더보기"],
+        ["today", "sun", ToDoI18n.t("오늘")],
+        ["all", "check", ToDoI18n.t("할 일")],
+        ["week", "week", ToDoI18n.t("이번 주")],
+        ["calendar", "week", ToDoI18n.t("캘린더")],
+        ["more", "more", ToDoI18n.t("더보기")],
       ],
       active = ["projects", "project", "completed", "trash", "more"].includes(
         view,
@@ -288,13 +288,13 @@
     $("#project-nav").innerHTML = state.projects
       .map(
         (p) =>
-          `<div class="project-nav-row ${view === "project" && projectFilter === p.id ? "active" : ""}"><button class="project-nav-item" data-project-view="${esc(p.id)}"><i class="dot" style="background:${p.color}"></i><span>${esc(p.name)}</span></button><button class="project-edit" data-edit-project="${esc(p.id)}" aria-label="${esc(p.name)} 수정 및 삭제">···</button></div>`,
+          ToDoI18n.html`<div class="project-nav-row ${view === "project" && projectFilter === p.id ? "active" : ""}"><button class="project-nav-item" data-project-view="${esc(p.id)}"><i class="dot" style="background:${p.color}"></i><span>${esc(p.name)}</span></button><button class="project-edit" data-edit-project="${esc(p.id)}" aria-label="${esc(p.name)} 수정 및 삭제">···</button></div>`,
       )
       .join("");
     $("#crumb").textContent =
       ns.find((n) => n[0] === view)?.[2] ||
       project(projectFilter)?.name ||
-      (view === "trash" ? "휴지통" : "할 일");
+      (view === "trash" ? ToDoI18n.t("휴지통") : ToDoI18n.t("할 일"));
     $(".sample-clear").hidden =
       !state.tasks.some((t) => t.sample) &&
       !state.projects.some((p) => p.sample);
@@ -311,10 +311,10 @@
           t.status !== "done",
       ).length;
     return `<div class="stats">${[
-      ["오늘의 할 일", remaining, "개", "", "sun"],
-      ["완료한 일", done, "개", "", "check"],
-      ["7일 내 일정", upcoming, "개", "", "week"],
-      ["오늘의 달성률", pct, "%", "", "grid"],
+      [ToDoI18n.t("오늘의 할 일"), remaining, ToDoI18n.t("개"), "", "sun"],
+      [ToDoI18n.t("완료한 일"), done, ToDoI18n.t("개"), "", "check"],
+      [ToDoI18n.t("7일 내 일정"), upcoming, ToDoI18n.t("개"), "", "week"],
+      [ToDoI18n.t("오늘의 달성률"), pct, "%", "", "grid"],
     ]
       .map(
         ([n, v, u, c, i]) =>
@@ -324,10 +324,10 @@
   }
   function filters() {
     return `<div class="tabs">${[
-      ["all", "전체"],
-      ["todo", "할 일"],
-      ["doing", "진행 중"],
-      ["done", "완료"],
+      ["all", ToDoI18n.t("전체")],
+      ["todo", ToDoI18n.t("할 일")],
+      ["doing", ToDoI18n.t("진행 중")],
+      ["done", ToDoI18n.t("완료")],
     ]
       .map(
         ([id, n]) =>
@@ -336,7 +336,7 @@
       .join("")}</div>`;
   }
   function projectSelector() {
-    return `<select id="project-filter" aria-label="프로젝트 필터"><option value="">모든 프로젝트</option>${state.projects.map((p) => `<option value="${esc(p.id)}" ${p.id === projectFilter ? "selected" : ""}>${esc(p.name)}</option>`).join("")}</select>`;
+    return ToDoI18n.html`<select id="project-filter" aria-label="프로젝트 필터"><option value="">모든 프로젝트</option>${state.projects.map((p) => `<option value="${esc(p.id)}" ${p.id === projectFilter ? "selected" : ""}>${esc(p.name)}</option>`).join("")}</select>`;
   }
   function renderToday() {
     let ts = sortTasks(
@@ -364,9 +364,9 @@
       ).slice(0, 3),
       start = weekStart(today());
     $("#main").innerHTML =
-      heading("오늘의 할 일") +
+      heading(ToDoI18n.t("오늘의 할 일")) +
       stats() +
-      `<div class="today-layout"><div><section class="panel"><div class="panel-heading"><h2>오늘의 할 일<span>${state.tasks.filter((t) => t.date === today()).length}</span></h2>${projectSelector()}</div>${filters()}${overdue.length ? `<div class="overdue-label">미뤄진 할 일 · ${overdue.length}개</div>${overdue.map((t) => taskRow(t, true)).join("")}` : ""}${ts.length ? ts.map((t) => taskRow(t)).join("") : empty(query ? "검색 결과가 없습니다." : "오늘의 할 일이 없습니다.")}${addRow(today())}</section><section class="panel weekly-preview"><div class="panel-heading"><h2>이번 주 한눈에</h2><button class="text-link" data-view="week">주간 계획 보기 ${icon("right")}</button></div><div class="week-strip">${Array.from(
+      ToDoI18n.html`<div class="today-layout"><div><section class="panel"><div class="panel-heading"><h2>오늘의 할 일<span>${state.tasks.filter((t) => t.date === today()).length}</span></h2>${projectSelector()}</div>${filters()}${overdue.length ? ToDoI18n.html`<div class="overdue-label">미뤄진 할 일 · ${overdue.length}개</div>${overdue.map((t) => taskRow(t, true)).join("")}` : ""}${ts.length ? ts.map((t) => taskRow(t)).join("") : empty(query ? ToDoI18n.t("검색 결과가 없습니다.") : ToDoI18n.t("오늘의 할 일이 없습니다."))}${addRow(today())}</section><section class="panel weekly-preview"><div class="panel-heading"><h2>이번 주 한눈에</h2><button class="text-link" data-view="week">주간 계획 보기 ${icon("right")}</button></div><div class="week-strip">${Array.from(
         { length: 7 },
         (_, i) => {
           let d = addDays(start, i),
@@ -384,19 +384,19 @@
         },
       ).join(
         "",
-      )}</div></section></div><div class="side-stack"><section class="focus-panel"><h2>${icon("star")}오늘의 중요한 일</h2><p>별표 표시한 오늘의 할 일 · 최대 3개</p>${focus.length ? focus.map((t, i) => `<div class="focus-item"><span>0${i + 1}</span><button data-edit="${esc(t.id)}">${esc(t.title)}</button></div>`).join("") : '<div class="focus-empty">별표 표시한 할 일이 없습니다.</div>'}</section><section class="note-panel"><h2>주간 메모</h2><textarea id="weekly-note" aria-label="이번 주 메모" placeholder="메모 입력">${esc(state.notes[start] || "")}</textarea></section></div></div>`;
+      )}</div></section></div><div class="side-stack"><section class="focus-panel"><h2>${icon("star")}오늘의 중요한 일</h2><p>별표 표시한 오늘의 할 일 · 최대 3개</p>${focus.length ? focus.map((t, i) => `<div class="focus-item"><span>0${i + 1}</span><button data-edit="${esc(t.id)}">${esc(t.title)}</button></div>`).join("") : ToDoI18n.t('<div class="focus-empty">별표 표시한 할 일이 없습니다.</div>')}</section><section class="note-panel"><h2>주간 메모</h2><textarea id="weekly-note" aria-label="이번 주 메모" placeholder="메모 입력">${esc(state.notes[start] || "")}</textarea></section></div></div>`;
   }
   function rangeToolbar(kind) {
     let d = parseDate(week),
       end = parseDate(addDays(week, 6)),
       label =
         kind === "week"
-          ? `${d.getMonth() + 1}월 ${d.getDate()}일 – ${end.getMonth() + 1}월 ${end.getDate()}일`
-          : `${month.slice(0, 4)}년 ${Number(month.slice(5))}월`;
-    return `<div class="toolbar"><div class="range-control"><button class="icon-button" data-action="prev" aria-label="이전 ${kind === "week" ? "주" : "달"}">${icon("left")}</button><strong>${label}</strong><button class="icon-button" data-action="next" aria-label="다음 ${kind === "week" ? "주" : "달"}">${icon("right")}</button><button class="secondary" data-action="current">오늘</button></div><div class="toolbar-group">${projectSelector()}<select id="status-filter" aria-label="상태 필터"><option value="all">모든 상태</option><option value="todo" ${filter === "todo" ? "selected" : ""}>할 일</option><option value="doing" ${filter === "doing" ? "selected" : ""}>진행 중</option><option value="done" ${filter === "done" ? "selected" : ""}>완료</option></select></div></div>`;
+          ? ToDoI18n.html`${d.getMonth() + 1}월 ${d.getDate()}일 – ${end.getMonth() + 1}월 ${end.getDate()}일`
+          : ToDoI18n.html`${month.slice(0, 4)}년 ${Number(month.slice(5))}월`;
+    return ToDoI18n.html`<div class="toolbar"><div class="range-control"><button class="icon-button" data-action="prev" aria-label="이전 ${kind === "week" ? ToDoI18n.t("주") : ToDoI18n.t("달")}">${icon("left")}</button><strong>${label}</strong><button class="icon-button" data-action="next" aria-label="다음 ${kind === "week" ? ToDoI18n.t("주") : ToDoI18n.t("달")}">${icon("right")}</button><button class="secondary" data-action="current">오늘</button></div><div class="toolbar-group">${projectSelector()}<select id="status-filter" aria-label="상태 필터"><option value="all">모든 상태</option><option value="todo" ${filter === "todo" ? "selected" : ""}>할 일</option><option value="doing" ${filter === "doing" ? "selected" : ""}>진행 중</option><option value="done" ${filter === "done" ? "selected" : ""}>완료</option></select></div></div>`;
   }
   function weekCard(t) {
-    return `<div class="week-card ${t.status === "done" ? "done" : ""}" draggable="true" data-drag="${esc(t.id)}"><div class="card-top"><button class="check ${t.status === "done" ? "checked" : ""}" data-toggle="${esc(t.id)}" aria-label="${esc(t.title)} ${t.status === "done" ? "완료 취소" : "완료"}">${t.status === "done" ? icon("check") : ""}</button>${priority(t)}</div><button class="task-text" data-edit="${esc(t.id)}"><span class="task-title">${esc(t.title)}</span><span class="task-meta">${t.time ? `<span>${timeLabel(t)}</span>` : ""}${t.status === "doing" ? "<span>진행 중</span>" : ""}</span><span class="task-meta">${pTag(t)}</span></button></div>`;
+    return `<div class="week-card ${t.status === "done" ? "done" : ""}" draggable="true" data-drag="${esc(t.id)}"><div class="card-top"><button class="check ${t.status === "done" ? "checked" : ""}" data-toggle="${esc(t.id)}" aria-label="${esc(t.title)} ${t.status === "done" ? ToDoI18n.t("완료 취소") : ToDoI18n.t("완료")}">${t.status === "done" ? icon("check") : ""}</button>${priority(t)}</div><button class="task-text" data-edit="${esc(t.id)}"><span class="task-title">${esc(t.title)}</span><span class="task-meta">${t.time ? `<span>${timeLabel(t)}</span>` : ""}${t.status === "doing" ? ToDoI18n.t("<span>진행 중</span>") : ""}</span><span class="task-meta">${pTag(t)}</span></button></div>`;
   }
   function renderWeek() {
     let visible = state.tasks.filter(
@@ -404,12 +404,12 @@
       ),
       undated = visible.filter((t) => !t.date);
     $("#main").innerHTML =
-      heading("주간 계획") +
+      heading(ToDoI18n.t("주간 계획")) +
       rangeToolbar("week") +
-      `<section class="week-board">${Array.from({ length: 7 }, (_, i) => {
+      ToDoI18n.html`<section class="week-board">${Array.from({ length: 7 }, (_, i) => {
         let date = addDays(week, i),
           ts = sortTasks(visible.filter((t) => t.date === date));
-        return `<div class="day-column ${date === today() ? "current" : ""}" data-drop="${date}"><div class="day-head"><div>${dayNames[parseDate(date).getDay()]}요일 <span>· ${ts.length}</span></div><b>${parseDate(date).getDate()}</b></div>${ts.map(weekCard).join("")}<button class="day-add" data-add-date="${date}">${icon("plus")}추가</button></div>`;
+        return ToDoI18n.html`<div class="day-column ${date === today() ? "current" : ""}" data-drop="${date}"><div class="day-head"><div>${dayNames[parseDate(date).getDay()]}요일 <span>· ${ts.length}</span></div><b>${parseDate(date).getDate()}</b></div>${ts.map(weekCard).join("")}<button class="day-add" data-add-date="${date}">${icon("plus")}추가</button></div>`;
       }).join(
         "",
       )}</section><p class="week-note">카드를 다른 요일로 옮겨 일정을 조정하세요. 카드를 누르면 상세 내용도 수정할 수 있어요.</p><section class="panel unscheduled"><div class="panel-heading"><h2>아직 날짜를 정하지 않은 일<span>${undated.length}</span></h2></div>${
@@ -417,7 +417,7 @@
           ? sortTasks(undated)
               .map((t) => taskRow(t))
               .join("")
-          : empty("날짜 미정인 할 일이 없습니다.")
+          : empty(ToDoI18n.t("날짜 미정인 할 일이 없습니다."))
       }${addRow("")}</section>`;
   }
   let calendarCountry = "KR";
@@ -504,15 +504,15 @@
     const known = !!holidayData[calendarCountry][year],
       loading = holidayRequests.get(calendarCountry + year) === "loading";
     $("#main").innerHTML =
-      heading("캘린더") +
-      `<div class="calendar-priority-legend"><span class="priority high">높음</span><span class="priority medium">보통</span><span class="priority low">낮음</span></div><div class="country-control"><label for="calendar-country">공휴일 달력</label><select id="calendar-country"><option value="KR" ${calendarCountry === "KR" ? "selected" : ""}>한국 달력</option><option value="JP" ${calendarCountry === "JP" ? "selected" : ""}>일본 달력</option></select></div>` +
+      heading(ToDoI18n.t("캘린더")) +
+      ToDoI18n.html`<div class="calendar-priority-legend"><span class="priority high">높음</span><span class="priority medium">보통</span><span class="priority low">낮음</span></div><div class="country-control"><label for="calendar-country">공휴일 달력</label><select id="calendar-country"><option value="KR" ${calendarCountry === "KR" ? "selected" : ""}>한국 달력</option><option value="JP" ${calendarCountry === "JP" ? "selected" : ""}>일본 달력</option></select></div>` +
       rangeToolbar("month") +
-      `<section class="panel calendar-panel"><div class="calendar-weekdays">${["일", "월", "화", "수", "목", "금", "토"].map((n, i) => `<span class="${i === 0 ? "sunday" : i === 6 ? "saturday" : ""}">${n}</span>`).join("")}</div><div class="calendar-grid">${Array.from(
+      ToDoI18n.html`<section class="panel calendar-panel"><div class="calendar-weekdays">${[ToDoI18n.t("일"), ToDoI18n.t("월"), ToDoI18n.t("화"), ToDoI18n.t("수"), ToDoI18n.t("목"), ToDoI18n.t("금"), ToDoI18n.t("토")].map((n, i) => `<span class="${i === 0 ? "sunday" : i === 6 ? "saturday" : ""}">${n}</span>`).join("")}</div><div class="calendar-grid">${Array.from(
         { length: cells },
         (_, i) => {
           const date = addDays(start, i),
             weekday = parseDate(date).getDay(),
-            name = holidays.get(date) || "",
+            name = ToDoI18n.t(holidays.get(date) || ""),
             ts = sortTasks(
               state.tasks.filter(
                 (t) =>
@@ -521,19 +521,19 @@
                   (filter === "all" || t.status === filter),
               ),
             );
-          return `<div class="calendar-cell ${date.slice(0, 7) !== month ? "other" : ""} ${date === today() ? "current" : ""} ${date === selectedDate ? "selected-date" : ""} ${name || weekday === 0 ? "holiday" : weekday === 6 ? "saturday" : ""}" data-drop="${date}"><div class="calendar-day-heading"><button class="calendar-date" data-calendar-date="${date}" aria-label="${friendly(date)}${name ? " " + esc(name) : ""} ${compact ? "일정 보기" : "할 일 추가"}">${parseDate(date).getDate()}</button>${name ? `<span class="holiday-name" title="${esc(name)}">${esc(name)}</span>` : ""}</div>${ts
+          return `<div class="calendar-cell ${date.slice(0, 7) !== month ? "other" : ""} ${date === today() ? "current" : ""} ${date === selectedDate ? "selected-date" : ""} ${name || weekday === 0 ? "holiday" : weekday === 6 ? "saturday" : ""}" data-drop="${date}"><div class="calendar-day-heading"><button class="calendar-date" data-calendar-date="${date}" aria-label="${friendly(date)}${name ? " " + esc(name) : ""} ${compact ? ToDoI18n.t("일정 보기") : ToDoI18n.t("할 일 추가")}">${parseDate(date).getDate()}</button>${name ? `<span class="holiday-name" title="${esc(name)}">${esc(name)}</span>` : ""}</div>${ts
             .slice(0, limit)
             .map(
               (t) =>
-                `<button class="calendar-event priority-${t.priority} ${t.status === "done" ? "done" : ""}" data-task-detail="${esc(t.id)}" title="${esc(t.title)}${t.time ? " · " + esc(timeLabel(t)) : ""}" aria-label="${esc(t.title)} 상세 보기"><span class="calendar-event-title">${esc(t.title)}</span>${t.time ? `<span class="calendar-time">${esc(t.time)}</span>` : ""}</button>`,
+                ToDoI18n.html`<button class="calendar-event priority-${t.priority} ${t.status === "done" ? "done" : ""}" data-task-detail="${esc(t.id)}" title="${esc(t.title)}${t.time ? " · " + esc(timeLabel(t)) : ""}" aria-label="${esc(t.title)} 상세 보기"><span class="calendar-event-title">${esc(t.title)}</span>${t.time ? `<span class="calendar-time">${esc(t.time)}</span>` : ""}</button>`,
             )
             .join(
               "",
-            )}${ts.length > limit ? `<button class="calendar-more" data-date-view="${date}">+${ts.length - limit}개 더 보기</button>` : ""}</div>`;
+            )}${ts.length > limit ? ToDoI18n.html`<button class="calendar-more" data-date-view="${date}">+${ts.length - limit}개 더 보기</button>` : ""}</div>`;
         },
       ).join(
         "",
-      )}</div></section>${selectedDate ? dayDetail(selectedDate) : ""}<p class="calendar-data-note">${known ? "공휴일·대체공휴일 표시" : loading ? "공휴일 정보 확인 중…" : "해당 연도의 공휴일 정보를 불러오지 못했습니다."} · <a href="${calendarCountry === "KR" ? "https://github.com/distbe/holidays" : "https://holidays-jp.github.io/"}" target="_blank" rel="noopener noreferrer">데이터 출처</a></p>`;
+      )}</div></section>${selectedDate ? dayDetail(selectedDate) : ""}<p class="calendar-data-note">${known ? ToDoI18n.t("공휴일·대체공휴일 표시") : loading ? ToDoI18n.t("공휴일 정보 확인 중…") : ToDoI18n.t("해당 연도의 공휴일 정보를 불러오지 못했습니다.")} · <a href="${calendarCountry === "KR" ? "https://github.com/distbe/holidays" : "https://holidays-jp.github.io/"}" target="_blank" rel="noopener noreferrer">데이터 출처</a></p>`;
   }
 
   function dayDetail(date) {
@@ -545,27 +545,27 @@
           (filter === "all" || t.status === filter),
       ),
     );
-    return `<section id="day-detail" class="panel unscheduled"><div class="panel-heading"><h2>${friendly(date)}의 할 일</h2><button class="text-link" data-action="close-date">닫기</button></div>${ts.map((t) => taskRow(t)).join("") || empty()}${addRow(date)}</section>`;
+    return ToDoI18n.html`<section id="day-detail" class="panel unscheduled"><div class="panel-heading"><h2>${friendly(date)}의 할 일</h2><button class="text-link" data-action="close-date">닫기</button></div>${ts.map((t) => taskRow(t)).join("") || empty()}${addRow(date)}</section>`;
   }
   function renderMore() {
     const row = (label, attribute, iconName = "right") =>
       `<button class="more-row" ${attribute}><span>${label}</span>${icon(iconName)}</button>`;
     $("#main").innerHTML =
-      heading("더보기") +
-      `<section class="more-section"><h2>관리</h2>${row("프로젝트", 'data-view="projects"', "folder")}${row("새 프로젝트", 'data-action="new-project"', "plus")}${row("완료한 일", 'data-view="completed"', "check")}${row("휴지통", 'data-view="trash"')}</section><section class="more-section"><h2>데이터</h2><button class="more-row" data-action="sync"><span>동기화<small id="more-sync-status">${esc(globalThis.HaruCloud?.status || "기기에 저장됨")}</small></span>${icon("right")}</button>${row("백업 내려받기", 'data-action="export"', "download")}${row("백업 가져오기", 'data-action="import"', "upload")}${row("가져오기 전 백업", 'data-action="export-recovery"')}${state.tasks.some((t) => t.sample) || state.projects.some((p) => p.sample) ? row("예시 데이터 지우기", 'data-action="clear-samples"') : ""}</section><section class="more-section"><h2>ToDo</h2>${!(matchMedia("(display-mode: standalone)").matches || navigator.standalone) ? row("앱 설치 안내", 'data-action="install"') : ""}<p class="more-note">같은 ToDo 계정으로 기기 간 동기화</p></section>`;
+      heading(ToDoI18n.t("더보기")) +
+      ToDoI18n.html`<section class="more-section"><h2>관리</h2>${row(ToDoI18n.t("프로젝트"), 'data-view="projects"', "folder")}${row(ToDoI18n.t("새 프로젝트"), 'data-action="new-project"', "plus")}${row(ToDoI18n.t("완료한 일"), 'data-view="completed"', "check")}${row(ToDoI18n.t("휴지통"), 'data-view="trash"')}</section><section class="more-section"><h2>데이터</h2><button class="more-row" data-action="sync"><span>동기화<small id="more-sync-status">${esc(globalThis.HaruCloud?.status || ToDoI18n.t("기기에 저장됨"))}</small></span>${icon("right")}</button>${row(ToDoI18n.t("백업 내려받기"), 'data-action="export"', "download")}${row(ToDoI18n.t("백업 가져오기"), 'data-action="import"', "upload")}${row(ToDoI18n.t("가져오기 전 백업"), 'data-action="export-recovery"')}${state.tasks.some((t) => t.sample) || state.projects.some((p) => p.sample) ? row(ToDoI18n.t("예시 데이터 지우기"), 'data-action="clear-samples"') : ""}</section><section class="more-section"><h2>ToDo</h2>${!(matchMedia("(display-mode: standalone)").matches || navigator.standalone) ? row(ToDoI18n.t("앱 설치 안내"), 'data-action="install"') : ""}<p class="more-note">같은 ToDo 계정으로 기기 간 동기화</p></section>`;
   }
   function renderProjects() {
     let ps = state.projects.filter(
       (p) => !query || p.name.toLowerCase().includes(query.toLowerCase()),
     );
     $("#main").innerHTML =
-      heading("프로젝트") +
-      `<div class="project-cards">${ps
+      heading(ToDoI18n.t("프로젝트")) +
+      ToDoI18n.html`<div class="project-cards">${ps
         .map((p) => {
           let ts = state.tasks.filter((t) => t.project === p.id),
             done = ts.filter((t) => t.status === "done").length,
             pct = ts.length ? Math.round((done / ts.length) * 100) : 0;
-          return `<section class="project-card" style="--project-color:${p.color}"><div class="project-card-top"><div class="folder-icon">${icon("folder")}</div><button class="text-link" data-edit-project="${esc(p.id)}">수정</button></div><h2>${esc(p.name)}</h2><p>할 일 ${ts.length}개 · 진행 중 ${ts.filter((t) => t.status === "doing").length}개</p><div class="project-progress"><span>${done} / ${ts.length} 완료</span><b>${pct}%</b></div><div class="progress-mini"><span style="width:${pct}%;background:${p.color}"></span></div><button class="project-open" data-project-view="${esc(p.id)}">프로젝트 열기 ${icon("right")}</button></section>`;
+          return ToDoI18n.html`<section class="project-card" style="--project-color:${p.color}"><div class="project-card-top"><div class="folder-icon">${icon("folder")}</div><button class="text-link" data-edit-project="${esc(p.id)}">수정</button></div><h2>${esc(p.name)}</h2><p>할 일 ${ts.length}개 · 진행 중 ${ts.filter((t) => t.status === "doing").length}개</p><div class="project-progress"><span>${done} / ${ts.length} 완료</span><b>${pct}%</b></div><div class="progress-mini"><span style="width:${pct}%;background:${p.color}"></span></div><button class="project-open" data-project-view="${esc(p.id)}">프로젝트 열기 ${icon("right")}</button></section>`;
         })
         .join(
           "",
@@ -587,26 +587,26 @@
     $("#main").innerHTML =
       heading(
         completed
-          ? "완료한 일"
+          ? ToDoI18n.t("완료한 일")
           : all
-            ? "전체 할 일"
-            : esc(p?.name || "전체 할 일"),
+            ? ToDoI18n.t("전체 할 일")
+            : esc(p?.name || ToDoI18n.t("전체 할 일")),
       ) +
-      '<section class="panel list-panel"><div class="panel-heading"><h2>할 일<span>' +
+      ToDoI18n.t('<section class="panel list-panel"><div class="panel-heading"><h2>할 일<span>') +
       ts.length +
-      '개</span></h2><div class="toolbar-group">' +
+      ToDoI18n.t('개</span></h2><div class="toolbar-group">') +
       (all || completed ? projectSelector() : "") +
-      '<select id="sort-order" aria-label="할 일 정렬"><option value="date" ' +
+      ToDoI18n.t('<select id="sort-order" aria-label="할 일 정렬"><option value="date" ') +
       (sortMode === "date" ? "selected" : "") +
-      '>날짜순</option><option value="priority" ' +
+      ToDoI18n.t('>날짜순</option><option value="priority" ') +
       (sortMode === "priority" ? "selected" : "") +
-      ">우선순위순</option></select></div></div>" +
+      ToDoI18n.t(">우선순위순</option></select></div></div>") +
       (!completed ? filters() : "") +
       (view === "project" && p
-        ? `<button class="project-settings-link secondary" data-edit-project="${esc(p.id)}">프로젝트 수정 · 삭제</button>`
+        ? ToDoI18n.html`<button class="project-settings-link secondary" data-edit-project="${esc(p.id)}">프로젝트 수정 · 삭제</button>`
         : "") +
       (ts.map((t) => taskRow(t, true)).join("") ||
-        empty(completed ? "완료한 할 일이 없습니다." : "할 일이 없습니다.")) +
+        empty(completed ? ToDoI18n.t("완료한 할 일이 없습니다.") : ToDoI18n.t("할 일이 없습니다."))) +
       (completed ? "" : addRow("")) +
       "</section>";
   }
@@ -689,14 +689,14 @@
   function openTaskDetail(id) {
     const t = state.tasks.find((t) => t.id === id);
     if (!t) {
-      toast("할 일을 찾을 수 없습니다.");
+      toast(ToDoI18n.t("할 일을 찾을 수 없습니다."));
       return;
     }
     const row = (label, value) =>
       `<div><dt>${label}</dt><dd>${esc(value)}</dd></div>`;
     const days = (t.repeatDays || []).map((d) => dayNames[d]).join(" · ");
     $("#task-detail-content").innerHTML =
-      `<h3 class="task-detail-title">${esc(t.title)}</h3><dl class="task-detail-fields">${row("날짜", t.date ? t.date.slice(0, 4) + "년 " + friendly(t.date) : "날짜 미정")}${row("시간", t.time ? timeLabel(t) : "시간 미정")}${row("우선순위", { high: "높음", medium: "보통", low: "낮음" }[t.priority])}${t.showProjectInDetail && project(t.project) ? row("프로젝트", project(t.project).name) : ""}${row("반복", t.repeat && t.repeat !== "none" ? repeatLabel(t) + (days ? " · " + days : "") : "반복 안 함")}${t.repeatUntil ? row("반복 종료", friendly(t.repeatUntil) + (t.repeatUntilTime ? " " + t.repeatUntilTime : "")) : ""}${t.dueDate ? row("마감", friendly(t.dueDate) + (t.dueTime ? " " + t.dueTime : "")) : ""}</dl>${t.notes ? `<section class="task-detail-notes"><h3>메모</h3><p>${esc(t.notes)}</p></section>` : ""}`;
+      `<h3 class="task-detail-title">${esc(t.title)}</h3><dl class="task-detail-fields">${row(ToDoI18n.t("날짜"), t.date ? t.date.slice(0, 4) + ToDoI18n.t("년 ") + friendly(t.date) : ToDoI18n.t("날짜 미정"))}${row(ToDoI18n.t("시간"), t.time ? timeLabel(t) : ToDoI18n.t("시간 미정"))}${row(ToDoI18n.t("우선순위"), { high: ToDoI18n.t("높음"), medium: ToDoI18n.t("보통"), low: ToDoI18n.t("낮음") }[t.priority])}${t.showProjectInDetail && project(t.project) ? row(ToDoI18n.t("프로젝트"), project(t.project).name) : ""}${row(ToDoI18n.t("반복"), t.repeat && t.repeat !== "none" ? repeatLabel(t) + (days ? " · " + days : "") : ToDoI18n.t("반복 안 함"))}${t.repeatUntil ? row(ToDoI18n.t("반복 종료"), friendly(t.repeatUntil) + (t.repeatUntilTime ? " " + t.repeatUntilTime : "")) : ""}${t.dueDate ? row(ToDoI18n.t("마감"), friendly(t.dueDate) + (t.dueTime ? " " + t.dueTime : "")) : ""}</dl>${t.notes ? ToDoI18n.html`<section class="task-detail-notes"><h3>메모</h3><p>${esc(t.notes)}</p></section>` : ""}`;
     $("#task-detail-edit").dataset.detailEdit = id;
     if (!$("#task-detail-dialog").open) $("#task-detail-dialog").showModal();
   }
@@ -704,16 +704,16 @@
     editId = id;
     let t = state.tasks.find((t) => t.id === id);
     if (id && !t) {
-      toast("할 일을 찾을 수 없습니다.");
+      toast(ToDoI18n.t("할 일을 찾을 수 없습니다."));
       return;
     }
     editOriginal = t ? JSON.stringify(t) : null;
     $("#task-form").reset();
     $("#task-form .form-error")?.remove();
-    $("#dialog-title").textContent = t ? "할 일 수정" : "새로운 할 일";
+    $("#dialog-title").textContent = t ? ToDoI18n.t("할 일 수정") : ToDoI18n.t("새로운 할 일");
     $("#delete-task").hidden = !t;
     $("#project-select").innerHTML =
-      '<option value="">프로젝트 없음</option>' +
+      ToDoI18n.t('<option value="">프로젝트 없음</option>') +
       state.projects
         .map((p) => `<option value="${esc(p.id)}">${esc(p.name)}</option>`)
         .join("");
@@ -784,8 +784,8 @@
     $("#repeat-settings").hidden = kind === "none";
     $("#repeat-help").textContent =
       kind === "monthly" || kind === "yearly"
-        ? "시작 날짜를 기준으로 반복합니다. 기준일이 없는 달은 말일을 사용하고, 제외한 요일이면 다음 선택 요일로 옮깁니다."
-        : "선택한 요일에만 다음 일정이 생성됩니다.";
+        ? ToDoI18n.t("시작 날짜를 기준으로 반복합니다. 기준일이 없는 달은 말일을 사용하고, 제외한 요일이면 다음 선택 요일로 옮깁니다.")
+        : ToDoI18n.t("선택한 요일에만 다음 일정이 생성됩니다.");
   }
   $("#task-form").addEventListener("change", (e) => {
     if (e.target.name === "repeat") {
@@ -797,15 +797,15 @@
     editProjectId = id;
     let p = project(id);
     if (id && !p) {
-      toast("프로젝트를 찾을 수 없습니다.");
+      toast(ToDoI18n.t("프로젝트를 찾을 수 없습니다."));
       return;
     }
     projectOriginal = p ? JSON.stringify(p) : null;
     $("#project-form").reset();
     $("#project-form .form-error")?.remove();
     $("#project-dialog-title").textContent = p
-      ? "프로젝트 수정"
-      : "새 프로젝트";
+      ? ToDoI18n.t("프로젝트 수정")
+      : ToDoI18n.t("새 프로젝트");
     $("#project-form").elements.name.value = p?.name || "";
     $("#project-form").elements.color.value = p?.color || "#6c7de0";
     $("#delete-project").hidden = !p;
@@ -832,18 +832,19 @@
   function showStorageState() {
     for (const id of ["mobile-sync-status", "more-sync-status"]) {
       const el = document.getElementById(id);
-      if (el) el.textContent = globalThis.HaruCloud?.status || "기기에 저장됨";
+      if (el) el.textContent = globalThis.HaruCloud?.status || ToDoI18n.t("기기에 저장됨");
     }
     const indicator = $(".storage");
     indicator.innerHTML = storageFailed
-      ? '<span class="live-dot"></span>저장 오류 · 백업 필요'
-      : '<span class="live-dot"></span><button class="sync-status-button" data-action="sync" title="다시 동기화">' +
-        esc(globalThis.HaruCloud?.status || "기기에 저장됨") +
+      ? ToDoI18n.t('<span class="live-dot"></span>저장 오류 · 백업 필요')
+      : ToDoI18n.t('<span class="live-dot"></span><button class="sync-status-button" data-action="sync" title="다시 동기화">') +
+        esc(globalThis.HaruCloud?.status || ToDoI18n.t("기기에 저장됨")) +
         "</button>" +
-        "<small>같은 ToDo 계정의 기기 간 공유</small>";
+        ToDoI18n.t("<small>같은 ToDo 계정의 기기 간 공유</small>");
     $("#storage-warning").hidden = !storageFailed;
   }
   function notifyError(message) {
+    message = ToDoI18n.t(message);
     const form = $("dialog[open] form");
     if (form) {
       let el = form.querySelector(".form-error");
@@ -863,7 +864,7 @@
     notifyError(
       error?.message?.includes("다른 탭")
         ? error.message
-        : "저장하지 못했습니다. 입력 내용은 유지됩니다. 저장 공간과 백업 파일을 확인해 주세요.",
+        : ToDoI18n.t("저장하지 못했습니다. 입력 내용은 유지됩니다. 저장 공간과 백업 파일을 확인해 주세요."),
     );
   }
   function change(fn, message = "", undo = "") {
@@ -891,7 +892,7 @@
       if (state.tasks.some((t) => t.id === id)) openTaskDetail(id);
       else {
         detail.close();
-        toast("이 일정이 다른 곳에서 삭제되었습니다.");
+        toast(ToDoI18n.t("이 일정이 다른 곳에서 삭제되었습니다."));
       }
     }
     const note = $("#weekly-note"),
@@ -913,7 +914,7 @@
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   function restoreItem(id) {
-    change((d) => Core.restore(d, id), "복원했습니다.");
+    change((d) => Core.restore(d, id), ToDoI18n.t("복원했습니다."));
   }
   function renderTrash() {
     const items = [...state.trash]
@@ -922,8 +923,8 @@
         (x) => !query || x.label.toLowerCase().includes(query.toLowerCase()),
       );
     $("#main").innerHTML =
-      heading("휴지통") +
-      `<section class="panel list-panel"><div class="panel-heading"><h2>삭제한 항목<span>${items.length}개</span></h2></div>${items.map((item) => `<div class="task-row"><div class="task-text"><span class="task-title">${esc(item.label)}</span><span class="task-meta">${new Date(item.deletedAt).toLocaleDateString("ko-KR")} · 할 일 ${item.tasks.length}개${item.projects.length ? ` · 프로젝트 ${item.projects.length}개` : ""}</span></div><button class="secondary" data-restore="${esc(item.id)}">복원</button></div>`).join("") || empty("삭제한 항목이 없습니다.")}</section>`;
+      heading(ToDoI18n.t("휴지통")) +
+      ToDoI18n.html`<section class="panel list-panel"><div class="panel-heading"><h2>삭제한 항목<span>${items.length}개</span></h2></div>${items.map((item) => ToDoI18n.html`<div class="task-row"><div class="task-text"><span class="task-title">${esc(item.label)}</span><span class="task-meta">${new Date(item.deletedAt).toLocaleDateString(ToDoI18n.locale)} · 할 일 ${item.tasks.length}개${item.projects.length ? ToDoI18n.html` · 프로젝트 ${item.projects.length}개` : ""}</span></div><button class="secondary" data-restore="${esc(item.id)}">복원</button></div>`).join("") || empty(ToDoI18n.t("삭제한 항목이 없습니다."))}</section>`;
   }
   function toggleTask(id) {
     change((d) => {
@@ -942,7 +943,7 @@
     const f = e.target.elements,
       title = f.title.value.trim();
     if (!title) {
-      f.title.setCustomValidity("할 일을 입력해 주세요.");
+      f.title.setCustomValidity(ToDoI18n.t("할 일을 입력해 주세요."));
       f.title.reportValidity();
       return;
     }
@@ -970,7 +971,7 @@
       star: f.star.checked,
     };
     if (data.repeat !== "none" && !data.date) {
-      f.date.setCustomValidity("반복할 날짜를 선택해 주세요.");
+      f.date.setCustomValidity(ToDoI18n.t("반복할 날짜를 선택해 주세요."));
       f.date.reportValidity();
       return;
     }
@@ -1005,7 +1006,7 @@
           data.repeatIndex = 0;
         }
         Core.updateTask(d, editId, data, uid);
-      }, "저장했습니다.")
+      }, ToDoI18n.t("저장했습니다."))
     )
       $("#task-dialog").close();
   });
@@ -1018,7 +1019,7 @@
     const f = e.target.elements,
       name = f.name.value.trim();
     if (!name) {
-      f.name.setCustomValidity("이름을 입력해 주세요.");
+      f.name.setCustomValidity(ToDoI18n.t("이름을 입력해 주세요."));
       f.name.reportValidity();
       return;
     }
@@ -1037,7 +1038,7 @@
             color: f.color.value,
             sample: false,
           });
-      }, "저장했습니다.")
+      }, ToDoI18n.t("저장했습니다."))
     )
       $("#project-dialog").close();
   });
@@ -1142,14 +1143,14 @@
     if (action === "delete-task") {
       const id = editId;
       let trashId;
-      const label = state.tasks.find((t) => t.id === id)?.title || "할 일";
+      const label = state.tasks.find((t) => t.id === id)?.title || ToDoI18n.t("할 일");
       if (
         change((d) => {
           trashId = Core.moveToTrash(d, [id], [], label, uid);
-        }, "휴지통으로 이동했습니다.")
+        }, ToDoI18n.t("휴지통으로 이동했습니다."))
       ) {
         $("#task-dialog").close();
-        if (trashId) toast("휴지통으로 이동했습니다.", trashId);
+        if (trashId) toast(ToDoI18n.t("휴지통으로 이동했습니다."), trashId);
       }
     }
     if (action === "delete-project") {
@@ -1157,19 +1158,19 @@
       $("#project-dialog").close();
       if (
         await confirmAction(
-          "프로젝트를 휴지통으로 옮길까요?",
-          "할 일은 유지하고 프로젝트 연결만 해제합니다. 휴지통에서 복원할 수 있습니다.",
+          ToDoI18n.t("프로젝트를 휴지통으로 옮길까요?"),
+          ToDoI18n.t("할 일은 유지하고 프로젝트 연결만 해제합니다. 휴지통에서 복원할 수 있습니다."),
         )
       ) {
         let trashId;
-        const name = project(id)?.name || "프로젝트";
+        const name = project(id)?.name || ToDoI18n.t("프로젝트");
         if (
           change((d) => {
             trashId = Core.moveToTrash(d, [], [id], name, uid);
-          }, "휴지통으로 이동했습니다.")
+          }, ToDoI18n.t("휴지통으로 이동했습니다."))
         ) {
           if (projectFilter === id) navigate("projects");
-          if (trashId) toast("휴지통으로 이동했습니다.", trashId);
+          if (trashId) toast(ToDoI18n.t("휴지통으로 이동했습니다."), trashId);
         }
       }
     }
@@ -1189,8 +1190,8 @@
     if (
       action === "clear-samples" &&
       (await confirmAction(
-        "예시 데이터를 휴지통으로 옮길까요?",
-        "직접 추가하거나 수정한 항목은 유지됩니다. 휴지통에서 복원할 수 있습니다.",
+        ToDoI18n.t("예시 데이터를 휴지통으로 옮길까요?"),
+        ToDoI18n.t("직접 추가하거나 수정한 항목은 유지됩니다. 휴지통에서 복원할 수 있습니다."),
       ))
     ) {
       let trashId;
@@ -1206,30 +1207,30 @@
                   ),
               )
               .map((p) => p.id);
-          trashId = Core.moveToTrash(d, ids, ps, "예시 데이터", uid);
-        }, "예시 데이터를 정리했습니다.") &&
+          trashId = Core.moveToTrash(d, ids, ps, ToDoI18n.t("예시 데이터"), uid);
+        }, ToDoI18n.t("예시 데이터를 정리했습니다.")) &&
         trashId
       )
-        toast("휴지통으로 이동했습니다.", trashId);
+        toast(ToDoI18n.t("휴지통으로 이동했습니다."), trashId);
     }
     if (action === "export") {
       download(JSON.stringify(state, null, 2), `haru-backup-${today()}.json`);
-      toast("백업 파일을 내려받았습니다.");
+      toast(ToDoI18n.t("백업 파일을 내려받았습니다."));
     }
     if (action === "export-raw") {
       try {
         download(persistence.raw(), `haru-original-${today()}.json`);
       } catch {
-        toast("브라우저 저장소에 접근할 수 없습니다.");
+        toast(ToDoI18n.t("브라우저 저장소에 접근할 수 없습니다."));
       }
     }
     if (action === "export-recovery") {
       try {
         const raw = persistence.recovery();
         if (raw) download(raw, `haru-before-import-${today()}.json`);
-        else toast("가져오기 전 백업이 없습니다.");
+        else toast(ToDoI18n.t("가져오기 전 백업이 없습니다."));
       } catch {
-        toast("백업을 읽지 못했습니다.");
+        toast(ToDoI18n.t("백업을 읽지 못했습니다."));
       }
     }
     if (action === "import") $("#import-file").click();
@@ -1282,21 +1283,21 @@
       const data = Core.validate(JSON.parse(await file.text()));
       if (
         await confirmAction(
-          "백업 파일을 가져올까요?",
-          `현재 내용을 할 일 ${data.tasks.length}개, 프로젝트 ${data.projects.length}개로 교체합니다. 가져오기 전 데이터는 별도 복구 백업으로 보관합니다.`,
+          ToDoI18n.t("백업 파일을 가져올까요?"),
+          ToDoI18n.html`현재 내용을 할 일 ${data.tasks.length}개, 프로젝트 ${data.projects.length}개로 교체합니다. 가져오기 전 데이터는 별도 복구 백업으로 보관합니다.`,
         )
       ) {
         state = persistence.replace(data);
         storageFailed = false;
         showStorageState();
         navigate("today");
-        toast("백업을 가져왔습니다.");
+        toast(ToDoI18n.t("백업을 가져왔습니다."));
       }
     } catch (error) {
       toast(
         error instanceof SyntaxError
-          ? "올바른 JSON 백업 파일을 선택해 주세요."
-          : error.message || "백업을 가져오지 못했습니다.",
+          ? ToDoI18n.t("올바른 JSON 백업 파일을 선택해 주세요.")
+          : error.message || ToDoI18n.t("백업을 가져오지 못했습니다."),
       );
     }
     e.target.value = "";
@@ -1355,7 +1356,7 @@
       date = col.dataset.drop;
     change((d) => {
       Core.moveTask(d, id, date);
-    }, "일정을 옮겼습니다.");
+    }, ToDoI18n.t("일정을 옮겼습니다."));
     dragged = null;
   });
   document.addEventListener("dragend", () => {

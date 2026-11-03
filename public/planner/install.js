@@ -49,11 +49,11 @@
         input = document.querySelector("#install-link");
       try {
         await navigator.clipboard.writeText(input.value);
-        status.textContent = "링크를 복사했습니다.";
+        status.textContent = ToDoI18n.t("링크를 복사했습니다.");
       } catch {
         input.focus();
         input.select();
-        status.textContent = "위 링크를 길게 눌러 복사해 주세요.";
+        status.textContent = ToDoI18n.t("위 링크를 길게 눌러 복사해 주세요.");
       }
     }
   });
