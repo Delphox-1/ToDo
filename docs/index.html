@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#ffffff" />
+    <meta
+      name="description"
+      content="할 일, 주간 일정, 캘린더와 프로젝트를 관리하는 개인 플래너."
+    />
+    <title>ToDo</title>
+    <link rel="icon" type="image/svg+xml" href="./planner/favicon.svg?v=todo" />
+    <meta name="application-name" content="ToDo" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="ToDo" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link
+      rel="manifest"
+      href="./manifest.webmanifest"
+      crossorigin="use-credentials"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="./planner/icons/apple-touch-icon.png"
+    />
+    <link rel="stylesheet" href="./planner/style.css" />
+    <link rel="stylesheet" href="./planner/notion.css" />
+    <link rel="stylesheet" href="./planner/responsive.css" />
+    <link rel="stylesheet" href="./planner/mobile-app.css" />
+  </head>
+  <body>
+    <svg class="svg-defs" aria-hidden="true">
+      <defs>
+        <symbol id="i-more" viewBox="0 0 24 24">
+          <circle cx="5" cy="12" r="1.5" />
+          <circle cx="12" cy="12" r="1.5" />
+          <circle cx="19" cy="12" r="1.5" />
+        </symbol>
+        <symbol id="i-sun" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="4" />
+          <path
+            d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"
+          />
+        </symbol>
+        <symbol id="i-week" viewBox="0 0 24 24">
+          <rect x="3" y="5" width="18" height="16" rx="3" />
+          <path d="M7 3v4m10-4v4M3 10h18M8 14h2m4 0h2m-8 3h2" />
+        </symbol>
+        <symbol id="i-grid" viewBox="0 0 24 24">
+          <rect x="3" y="3" width="7" height="7" rx="2" />
+          <rect x="14" y="3" width="7" height="7" rx="2" />
+          <rect x="3" y="14" width="7" height="7" rx="2" />
+          <rect x="14" y="14" width="7" height="7" rx="2" />
+        </symbol>
+        <symbol id="i-check" viewBox="0 0 24 24">
+          <path d="m5 12 4 4L19 6" />
+        </symbol>
+        <symbol id="i-search" viewBox="0 0 24 24">
+          <circle cx="10.5" cy="10.5" r="6.5" />
+          <path d="m16 16 5 5" />
+        </symbol>
+        <symbol id="i-plus" viewBox="0 0 24 24">
+          <path d="M12 5v14M5 12h14" />
+        </symbol>
+        <symbol id="i-left" viewBox="0 0 24 24">
+          <path d="m14 6-6 6 6 6" />
+        </symbol>
+        <symbol id="i-right" viewBox="0 0 24 24">
+          <path d="m10 6 6 6-6 6" />
+        </symbol>
+        <symbol id="i-star" viewBox="0 0 24 24">
+          <path
+            d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9Z"
+          />
+        </symbol>
+        <symbol id="i-folder" viewBox="0 0 24 24">
+          <path
+            d="M3 7a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"
+          />
+        </symbol>
+        <symbol id="i-download" viewBox="0 0 24 24">
+          <path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" />
+        </symbol>
+        <symbol id="i-upload" viewBox="0 0 24 24">
+          <path d="M12 16V4m-5 5 5-5 5 5M4 16v5h16v-5" />
+        </symbol>
+      </defs>
+    </svg>
+    <aside class="sidebar">
+      <a class="brand" href="#today"
+        ><span class="brand-icon">📅</span>
+        <div>ToDo</div></a
+      >
+      <button class="mobile-install-launch" data-action="install">
+        앱 설치
+      </button>
+      <div class="workspace">
+        <span class="avatar">나</span>
+        <div>나의 워크스페이스<small>PERSONAL SPACE</small></div>
+        <span class="workspace-dot"></span>
+      </div>
+      <div class="nav-label">개인 페이지</div>
+      <nav id="navigation"></nav>
+      <div class="project-heading">
+        <span class="nav-label">프로젝트</span
+        ><button
+          class="icon-button"
+          data-action="new-project"
+          aria-label="프로젝트 추가"
+        >
+          <svg><use href="#i-plus" /></svg>
+        </button>
+      </div>
+      <div id="project-nav"></div>
+      <div class="sidebar-bottom">
+        <button class="utility-link" data-action="install">앱 설치</button
+        ><button class="utility-link" data-view="trash">휴지통</button
+        ><button class="utility-link" data-action="export-recovery">
+          가져오기 전 백업
+        </button>
+        <div class="storage">
+          <span class="live-dot"></span>서버 연결 중<small
+            >같은 ToDo 계정의 기기 간 공유</small
+          >
+        </div>
+        <div class="backup-actions">
+          <button data-action="export">
+            <svg><use href="#i-download" /></svg>백업</button
+          ><button data-action="import">
+            <svg><use href="#i-upload" /></svg>가져오기
+          </button>
+        </div>
+        <button class="sample-clear" data-action="clear-samples">
+          예시 데이터 지우기
+        </button>
+      </div>
+    </aside>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="mobile-brand" href="#today"><span>📅</span>ToDo</a>
+        <div class="breadcrumb">
+          나의 공간 <span>/</span> <b id="crumb">오늘</b>
+        </div>
+        <div class="topbar-actions">
+          <label class="search"
+            ><svg><use href="#i-search" /></svg
+            ><input
+              id="search"
+              placeholder="할 일 검색"
+              aria-label="할 일 검색"
+            /><kbd>/</kbd></label
+          ><button class="primary" data-action="add">
+            <svg><use href="#i-plus" /></svg>할 일 추가
+          </button>
+        </div>
+      </header>
+      <div id="storage-warning" class="storage-warning" role="alert" hidden>
+        자동 저장을 사용할 수 없습니다.
+        <button data-action="export-raw">저장 원본 백업</button
+        ><button data-action="export">현재 데이터 백업</button>
+      </div>
+      <main id="main"><div class="empty">기록을 불러오는 중…</div></main>
+      <footer>
+        <div>ToDo</div>
+        <div class="mobile-backup">
+          <button data-action="install">앱 설치 안내</button
+          ><button data-action="export">백업 내려받기</button
+          ><button data-action="import">백업 가져오기</button
+          ><button data-action="clear-samples">예시 지우기</button
+          ><button data-view="trash">휴지통</button
+          ><button data-action="export-recovery">가져오기 전 백업</button
+          ><button
+            class="sync-status-button"
+            id="mobile-sync-status"
+            data-action="storage-info"
+            title="로컬 저장 안내"
+          >
+            서버 연결 중
+          </button>
+        </div>
+      </footer>
+    </div>
+    <nav id="mobile-navigation" aria-label="주요 메뉴"></nav>
+    <dialog id="task-dialog">
+      <form id="task-form">
+        <div class="dialog-heading">
+          <div><h2 id="dialog-title">새로운 할 일</h2></div>
+          <button
+            type="button"
+            class="close"
+            data-action="close"
+            aria-label="닫기"
+          >
+            ×
+          </button>
+        </div>
+        <label
+          >무엇을 할까요?<input
+            name="title"
+            required
+            maxlength="160"
+            placeholder="할 일을 입력하세요"
+            autocomplete="off"
+        /></label>
+        <div class="form-grid">
+          <label>날짜<input type="date" name="date" /></label
+          ><label>시작 시간 · 선택<input type="time" name="time" /></label
+          ><label>종료 시간 · 선택<input type="time" name="endTime" /></label
+          ><label
+            >우선순위<select name="priority">
+              <option value="high">높음</option>
+              <option value="medium" selected>보통</option>
+              <option value="low">낮음</option>
+            </select></label
+          >
+          <div class="project-field">
+            <label
+              >프로젝트<select
+                name="project"
+                id="project-select"
+              ></select></label
+            ><label class="check-label project-detail-option"
+              ><input type="checkbox" name="showProjectInDetail" /> 일정 상세에
+              프로젝트 표시</label
+            >
+          </div>
+          <label
+            >반복<select name="repeat">
+              <option value="none">반복 안 함</option>
+              <option value="daily">매일</option>
+              <option value="weekly">매주</option>
+              <option value="monthly">매월</option>
+              <option value="yearly">매년</option>
+            </select></label
+          >
+        </div>
+        <fieldset id="repeat-settings" hidden>
+          <legend>반복 설정</legend>
+          <div class="weekday-heading">반복할 요일</div>
+          <div class="weekday-options">
+            <label
+              ><input type="checkbox" name="repeatDays" value="1" /><span
+                >월</span
+              ></label
+            ><label
+              ><input type="checkbox" name="repeatDays" value="2" /><span
+                >화</span
+              ></label
+            ><label
+              ><input type="checkbox" name="repeatDays" value="3" /><span
+                >수</span
+              ></label
+            ><label
+              ><input type="checkbox" name="repeatDays" value="4" /><span
+                >목</span
+              ></label
+            ><label
+              ><input type="checkbox" name="repeatDays" value="5" /><span
+                >금</span
+              ></label
+            ><label
+              ><input type="checkbox" name="repeatDays" value="6" /><span
+                >토</span
+              ></label
+            ><label
+              ><input type="checkbox" name="repeatDays" value="0" /><span
+                >일</span
+              ></label
+            >
+          </div>
+          <p id="repeat-help" class="field-help"></p>
+          <div class="form-grid">
+            <label
+              >반복 종료 날짜 · 선택<input
+                type="date"
+                name="repeatUntil" /></label
+            ><label
+              >반복 종료 시각 · 선택<input type="time" name="repeatUntilTime"
+            /></label>
+          </div>
+          <p class="field-help">
+            종료 날짜를 비우면 계속 반복합니다. 시각을 비우면 해당 날짜까지
+            반복합니다. 저장하면 선택한 요일의 일정이 주간 보기와 캘린더에
+            자동으로 표시됩니다.
+          </p>
+        </fieldset>
+        <details class="deadline-settings">
+          <summary>할 일 마감 · 선택</summary>
+          <div class="form-grid">
+            <label>마감 날짜<input type="date" name="dueDate" /></label
+            ><label>마감 시각 · 선택<input type="time" name="dueTime" /></label>
+          </div>
+          <p class="field-help">
+            시각을 비우면 마감일의 하루가 끝날 때까지입니다.
+          </p>
+        </details>
+        <label
+          >메모<textarea
+            name="notes"
+            rows="3"
+            maxlength="3000"
+            placeholder="잊지 말아야 할 내용을 적어두세요"
+          ></textarea></label
+        ><label class="check-label"
+          ><input type="checkbox" name="star" /> 중요한 일로 표시</label
+        >
+        <div class="dialog-footer">
+          <button
+            type="button"
+            class="danger-text"
+            id="delete-task"
+            data-action="delete-task"
+          >
+            삭제
+          </button>
+          <div>
+            <button type="button" class="secondary" data-action="close">
+              취소</button
+            ><button type="submit" class="primary">저장하기</button>
+          </div>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="task-detail-dialog" aria-labelledby="task-detail-heading">
+      <div class="dialog-heading">
+        <h2 id="task-detail-heading">일정 상세</h2>
+        <button
+          type="button"
+          class="close"
+          data-action="close"
+          aria-label="닫기"
+        >
+          ×
+        </button>
+      </div>
+      <div id="task-detail-content"></div>
+      <div class="dialog-footer task-detail-footer">
+        <button type="button" class="secondary" data-action="close">닫기</button
+        ><button type="button" class="primary" id="task-detail-edit">
+          수정
+        </button>
+      </div>
+    </dialog>
+    <dialog id="project-dialog">
+      <form id="project-form">
+        <div class="dialog-heading">
+          <h2 id="project-dialog-title">새 프로젝트</h2>
+          <button
+            class="close"
+            type="button"
+            data-action="close"
+            aria-label="닫기"
+          >
+            ×
+          </button>
+        </div>
+        <label
+          >프로젝트 이름<input
+            name="name"
+            required
+            maxlength="60"
+            placeholder="프로젝트 이름" /></label
+        ><label
+          >프로젝트 색상<select name="color">
+            <option value="#6c7de0">라벤더</option>
+            <option value="#44876e">그린</option>
+            <option value="#d1954d">앰버</option>
+            <option value="#c77d94">로즈</option>
+            <option value="#4c95af">블루</option>
+          </select></label
+        >
+        <div class="dialog-footer">
+          <button
+            class="danger-text"
+            type="button"
+            data-action="delete-project"
+            id="delete-project"
+          >
+            프로젝트 삭제</button
+          ><button class="primary" type="submit">저장하기</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="confirm-dialog">
+      <h2 id="confirm-title"></h2>
+      <p id="confirm-description"></p>
+      <div class="confirm-actions">
+        <button class="secondary" id="confirm-no">취소</button
+        ><button class="primary" id="confirm-yes">확인</button>
+      </div>
+    </dialog>
+    <dialog id="install-dialog" aria-labelledby="install-title">
+      <div class="dialog-heading">
+        <h2 id="install-title">홈 화면에 ToDo 설치</h2>
+        <button
+          type="button"
+          class="close"
+          data-install-close
+          aria-label="닫기"
+        >
+          ×
+        </button>
+      </div>
+      <div class="install-app-preview">
+        <img
+          src="./planner/icons/apple-touch-icon.png"
+          width="60"
+          height="60"
+          alt=""
+        />
+        <div><strong>ToDo</strong><span>아이폰 · 아이패드</span></div>
+      </div>
+      <ol class="install-steps">
+        <li>
+          <strong>휴대폰 브라우저에서 ToDo 열기</strong
+          ><span>로그인 없이 이 브라우저에 저장합니다.</span>
+        </li>
+        <li>
+          <strong>공유 버튼 → 홈 화면에 추가</strong
+          ><span>메뉴에 없으면 더 보기에서 찾을 수 있습니다.</span>
+        </li>
+        <li>
+          <strong>‘웹 앱으로 열기’를 켜고 추가</strong
+          ><span
+            >이 옵션이 보이는 경우 켜 주세요. 이름은 ToDo로 두면 됩니다.</span
+          >
+        </li>
+      </ol>
+      <p class="install-note">
+        홈 화면 기능은 브라우저에 따라 다릅니다. 휴대폰에서는 본인의 GitHub Pages 주소를 사용하세요. PC의 로컬 주소는 해당 PC에서만 열립니다. 기기 간 데이터는 백업 파일로 옮길 수 있습니다.
+      </p>
+      <label class="install-link-label" for="install-link"
+        >Safari에서 열 링크</label
+      >
+      <div class="install-copy-row">
+        <input
+          id="install-link"
+          readonly
+          aria-label="설치할 사이트 주소"
+        /><button type="button" class="secondary" id="copy-install-link">
+          링크 복사
+        </button>
+      </div>
+      <p id="install-copy-status" role="status" aria-live="polite"></p>
+      <div class="confirm-actions">
+        <button type="button" class="primary" data-install-close>확인</button>
+      </div>
+    </dialog>
+    <input
+      type="file"
+      id="import-file"
+      accept="application/json,.json"
+      hidden
+    />
+    <div id="toast" role="status" aria-live="polite"></div>
+    <script src="./planner/local-mode.js" defer></script>
+    <script src="./planner/holidays.js" defer></script>
+    <script src="./planner/core.js" defer></script>
+    <script src="./planner/app.js" defer></script>
+    <script src="./planner/install.js" defer></script>
+  </body>
+</html>

@@ -41,7 +41,7 @@
         return;
       }
       document.querySelector("#install-copy-status").textContent = "";
-      document.querySelector("#install-link").value = location.origin + "/";
+      document.querySelector("#install-link").value = new URL(".", location.href).href;
       dialog.showModal();
     }
     if (button.id === "copy-install-link") {
