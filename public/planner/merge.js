@@ -1,8 +1,9 @@
 (function (root, factory) {
-  const api = factory();
+  const api = factory(typeof module === "object" && module.exports
+    ? require("./planner-core.cjs") : root.HaruCore);
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.ToDoMerge = api;
-})(globalThis, () => {
+})(globalThis, (Core) => {
   const same = (a, b) => JSON.stringify(a) === JSON.stringify(b),
     clone = (x) => JSON.parse(JSON.stringify(x));
   function records(base, local, remote) {
@@ -104,6 +105,9 @@
       trash: records(base.trash || [], local.trash || [], remote.trash || []),
       notes: { ...remote.notes },
     };
+    // Compare the last synced snapshot to detect permanent removal without storing tombstones.
+    const removed = [...Core.removedTrash(base, local), ...Core.removedTrash(base, remote)];
+    if (removed.length) Core.removeDeletedRecords(result, removed);
     for (const key of new Set([
       ...Object.keys(base.notes || {}),
       ...Object.keys(local.notes || {}),

@@ -16,16 +16,21 @@ export async function GET(request: Request) {
       request.headers.get("X-ToDo-Account") !== user.userId)
   )
     return reply({ error: "sign_in_required" }, 401);
-  const row = await env.DB.prepare(
-    "SELECT payload, revision FROM planner_state WHERE user_id = ?",
-  )
-    .bind(user.userId)
-    .first<{ payload: string; revision: number }>();
-  return reply(
-    row
-      ? { state: JSON.parse(row.payload), revision: row.revision }
-      : { state: null, revision: 0 },
-  );
+  // Enforce retention before returning data, and persist cleanup with revision checks.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const row = await env.DB.prepare(
+      "SELECT payload, revision FROM planner_state WHERE user_id = ?",
+    ).bind(user.userId).first<{ payload: string; revision: number }>();
+    if (!row) return reply({ state: null, revision: 0 });
+    const state = Core.validate(JSON.parse(row.payload));
+    const payload = JSON.stringify(state);
+    if (payload === row.payload) return reply({ state, revision: row.revision });
+    const result = await env.DB.prepare(
+      "UPDATE planner_state SET payload=?, revision=revision+1, updated_at=? WHERE user_id=? AND revision=?",
+    ).bind(payload, new Date().toISOString(), user.userId, row.revision).run();
+    if (result.meta.changes) return reply({ state, revision: row.revision + 1 });
+  }
+  return reply({ error: "storage_busy" }, 503);
 }
 export async function PUT(request: Request) {
   if (!env.DB) return reply({ error: "storage_unavailable" }, 503);

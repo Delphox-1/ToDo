@@ -6,6 +6,14 @@ A personal planner with tasks, weekly schedules, a calendar, and projects. **Dep
 
 It does not connect to the developer's live site. Choose **self-hosted deployment** for sign-in and automatic sync. Separate PC-local and Pages modes remain available without sign-in.
 
+- Mark overdue, unfinished tasks as failed or deferred
+- Select all, restore selected items, permanently delete selected items, or empty the trash
+- Permanently remove trash items 30 days after deletion, when the app loads, runs, or syncs
+- Prevent permanently deleted items from returning through stale device data or the internal recovery copy
+- Database check below Trash: inspect the current browser in PC/Pages mode, or the signed-in user's data on a personal server
+
+**Permanently deleted and expired items cannot be restored in the app.** The internal recovery copy is also cleaned; downloaded backup files are not changed. The check does not guarantee faster performance.
+
 ## Features
 
 - Add, edit, and complete tasks; organize them by priority and project

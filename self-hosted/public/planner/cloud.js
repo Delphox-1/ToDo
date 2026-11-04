@@ -29,6 +29,8 @@
     const next = JSON.stringify(HaruCore.validate(state)),
       old = localStorage.getItem(key);
     if (old !== next) {
+      HaruCore.scrubRecovery(localStorage, key,
+        HaruCore.removedTrash(old ? JSON.parse(old) : empty(), state));
       localStorage.setItem(key, next);
       window.dispatchEvent(
         new StorageEvent("storage", { key, oldValue: old, newValue: next }),

@@ -1595,3 +1595,19 @@ select:focus {
     font-size: 22px;
   }
 }
+
+/* Decisions for unfinished tasks appear after their scheduled day. */
+.missed-choices { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border, #e9e9e7); }
+.missed-choice { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; font-size: 13px; color: var(--muted, #787774); cursor: pointer; }
+.missed-choice input { width: 16px; height: 16px; margin: 0; accent-color: #2383e2; cursor: pointer; }
+.missed-choice.selected { color: var(--text, #37352f); }
+
+.trash-retention { padding: 0 0 14px; color: var(--muted, #787774); font-size: 13px; line-height: 1.6; }
+.trash-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 0; border-block: 1px solid var(--border, #e9e9e7); }
+.trash-select { display: inline-flex; align-items: center; gap: 8px; min-height: 32px; flex-shrink: 0; font-size: 14px; cursor: pointer; }
+.trash-select input { width: 18px; height: 18px; margin: 0; accent-color: #2383e2; cursor: pointer; }
+.trash-selection-count { color: var(--muted, #787774); font-size: 13px; }
+.trash-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+.trash-danger { color: #c44438; }
+.trash-toolbar button:disabled { opacity: .4; cursor: default; }
+@media (max-width: 600px) { .trash-actions { width: 100%; margin-left: 0; } .trash-actions button { flex: 1; padding-inline: 8px; } }

@@ -27,7 +27,7 @@
       else location.reload();
     });
     sessions.announce(user.userId);
-    for (const file of ["holidays", "core", "merge", "cloud", "app", "install"])
+    for (const file of ["holidays", "core", "merge", "cloud", "trash-view", "app", "install", "maintenance"])
       await new Promise((resolve, reject) => {
         const s = document.createElement("script");
         s.src = `/planner/${file}.js`;

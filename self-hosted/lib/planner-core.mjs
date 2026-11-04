@@ -53,6 +53,7 @@ const Core = (() => {
         t.title.length > 1000 ||
         !validDate(t.date) ||
         !["todo", "doing", "done"].includes(t.status) ||
+        (t.missedOutcome !== undefined && !["", "failed", "deferred"].includes(t.missedOutcome)) ||
         !["high", "medium", "low"].includes(t.priority) ||
         !["none", "daily", "weekly", "monthly", "yearly"].includes(t.repeat) ||
         typeof t.project !== "string" ||
@@ -170,6 +171,7 @@ const Core = (() => {
       )
         throw Error("휴지통 연결 정보가 올바르지 않습니다.");
     }
+    purgeExpiredTrash(d);
     return d;
   }
   function nextScheduledDate(t) {
@@ -264,6 +266,7 @@ const Core = (() => {
       date: nextDate,
       dueDate,
       status: "todo",
+      missedOutcome: "",
       repeatAnchor: t.repeatAnchor || t.date,
       repeatIndex: next.index,
       series: lineage,
@@ -272,6 +275,21 @@ const Core = (() => {
       autoOccurrence: true,
     });
     return true;
+  }
+  function descendantsOf(tasks, rootId) {
+    const children = new Map();
+    for (const task of tasks) {
+      if (!children.has(task.generatedFrom)) children.set(task.generatedFrom, []);
+      children.get(task.generatedFrom).push(task.id);
+    }
+    const found = new Set(), pending = [rootId];
+    while (pending.length) {
+      const id = pending.pop();
+      if (found.has(id)) continue;
+      found.add(id);
+      pending.push(...(children.get(id) || []));
+    }
+    return found;
   }
   function updateTask(d, id, patch, idFactory) {
     let t = id ? d.tasks.find((x) => x.id === id) : null;
@@ -299,21 +317,9 @@ const Core = (() => {
       );
       if (changed) {
         t.series = idFactory();
-        const descendants = new Set([t.id]),
-          trashed = d.trash.flatMap((x) => x.tasks),
-          all = [...d.tasks, ...trashed];
-        let more = true;
-        while (more) {
-          more = false;
-          for (const child of all)
-            if (
-              descendants.has(child.generatedFrom) &&
-              !descendants.has(child.id)
-            ) {
-              descendants.add(child.id);
-              more = true;
-            }
-        }
+        const trashed = d.trash.flatMap((x) => x.tasks),
+          all = [...d.tasks, ...trashed],
+          descendants = descendantsOf(all, t.id);
         const preserved = d.tasks.filter(
           (x) =>
             x.id !== t.id &&
@@ -359,6 +365,8 @@ const Core = (() => {
       t = { id: idFactory() };
       d.tasks.push(t);
     }
+    if (("date" in patch && patch.date !== t.date) || patch.status === "done")
+      t.missedOutcome = "";
     Object.assign(t, patch, { sample: false });
     if (t.status === "done" && previous !== "done")
       scheduleNext(d, t, idFactory);
@@ -420,6 +428,7 @@ const Core = (() => {
           date: next.date,
           dueDate,
           status: "todo",
+          missedOutcome: "",
           series: lineage,
           generatedFrom: cursor.id,
           repeatAnchor: cursor.repeatAnchor || cursor.date,
@@ -452,6 +461,23 @@ const Core = (() => {
       t.dueDate = addDays(t.dueDate, offset);
     }
     t.date = date;
+    t.missedOutcome = "";
+    t.sample = false;
+    t.autoOccurrence = false;
+  }
+  const isFailed = (t) => t.status !== "done" && t.missedOutcome === "failed";
+  function isMissed(t, currentDate) {
+    return !!t.date && t.date < currentDate && t.status !== "done";
+  }
+  function isDeferred(t, currentDate) {
+    return isMissed(t, currentDate) && t.missedOutcome === "deferred";
+  }
+  function setMissedOutcome(d, id, outcome, currentDate) {
+    const t = d.tasks.find((task) => task.id === id);
+    if (!t) throw Error("할 일을 찾을 수 없습니다.");
+    if (!isMissed(t, currentDate) || !["", "failed", "deferred"].includes(outcome))
+      throw Error("지난 미완료 할 일만 선택할 수 있습니다.");
+    t.missedOutcome = outcome;
     t.sample = false;
     t.autoOccurrence = false;
   }
@@ -478,6 +504,7 @@ const Core = (() => {
     return item.id;
   }
   function restore(d, id) {
+    purgeExpiredTrash(d);
     const item = d.trash.find((x) => x.id === id);
     if (!item) throw Error("복원할 항목이 없습니다.");
     for (const p of item.projects)
@@ -502,13 +529,91 @@ const Core = (() => {
     }
     d.trash = d.trash.filter((x) => x.id !== id);
   }
+  const TRASH_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
+  function removeDeletedRecords(d, items) {
+    const trashIds = new Set(items.map((x) => x.id));
+    const removed = items.flatMap((x) => x.tasks);
+    const taskIds = new Set(removed.map((x) => x.id));
+    const projectIds = new Set(items.flatMap((x) => x.projects.map((p) => p.id)));
+    const occurrences = new Set(removed.filter((t) => t.series).map((t) => t.series + "|" + t.date));
+    d.trash = d.trash.filter((x) => !trashIds.has(x.id));
+    const keep = (t) => !taskIds.has(t.id) && !occurrences.has(t.series + "|" + t.date);
+    d.tasks = d.tasks.filter(keep);
+    d.projects = d.projects.filter((p) => !projectIds.has(p.id));
+    for (const item of d.trash) {
+      item.tasks = item.tasks.filter(keep);
+      item.projects = item.projects.filter((p) => !projectIds.has(p.id));
+      item.links = item.links.filter((l) => !projectIds.has(l.project) && !taskIds.has(l.task));
+    }
+    d.trash = d.trash.filter((x) => x.tasks.length || x.projects.length);
+    const all = [...d.tasks, ...d.trash.flatMap((x) => x.tasks)];
+    const byId = new Map(all.map((t) => [t.id, t]));
+    const deletedById = new Map(removed.map((t) => [t.id, t]));
+    // Split recurrence chains at removed occurrences. No deletion log or IDs remain.
+    for (const deleted of removed) {
+      let parentId = deleted.generatedFrom;
+      const seen = new Set();
+      while (deletedById.has(parentId) && !seen.has(parentId)) {
+        seen.add(parentId);
+        parentId = deletedById.get(parentId).generatedFrom;
+      }
+      const previous = byId.get(parentId);
+      if (previous) {
+        previous.repeatUntil = previous.date;
+        previous.repeatUntilTime = "";
+      }
+    }
+    for (const next of all) {
+      if (projectIds.has(next.project)) next.project = "";
+      if (!taskIds.has(next.generatedFrom)) continue;
+      delete next.generatedFrom;
+      const descendants = descendantsOf(all, next.id);
+      for (const t of all) if (descendants.has(t.id)) t.series = next.id;
+    }
+    for (const t of all) if (taskIds.has(t.series)) delete t.series;
+  }
+  function permanentlyDelete(d, ids) {
+    const selected = new Set(ids), items = d.trash.filter((x) => selected.has(x.id));
+    if (!items.length) return 0;
+    removeDeletedRecords(d, items);
+    return items.length;
+  }
+  function purgeExpiredTrash(d, now = Date.now()) {
+    return permanentlyDelete(d, d.trash.filter((x) =>
+      now - Date.parse(x.deletedAt) >= TRASH_RETENTION_MS).map((x) => x.id));
+  }
+  function removedTrash(before, after) {
+    const trashIds = new Set((after.trash || []).map((x) => x.id));
+    const taskIds = new Set([...after.tasks, ...(after.trash || []).flatMap((x) => x.tasks)].map((t) => t.id));
+    const projectIds = new Set([...after.projects, ...(after.trash || []).flatMap((x) => x.projects)].map((p) => p.id));
+    return (before.trash || []).filter((x) => !trashIds.has(x.id)).map((item) => ({
+      ...item, tasks: item.tasks.filter((t) => !taskIds.has(t.id)),
+      projects: item.projects.filter((p) => !projectIds.has(p.id)),
+    })).filter((x) => x.tasks.length || x.projects.length);
+  }
+  function scrubRecovery(storage, key, items = []) {
+    const recoveryKey = key + ".recovery", raw = storage.getItem(recoveryKey);
+    if (!raw) return;
+    let backup;
+    try { backup = validate(JSON.parse(raw)); }
+    catch {
+      if (items.length) storage.removeItem(recoveryKey);
+      return;
+    }
+    if (items.length) removeDeletedRecords(backup, items);
+    const clean = JSON.stringify(backup);
+    if (clean !== raw) storage.setItem(recoveryKey, clean);
+  }
   function createStore(storage, key, seed) {
     let state,
       loadError = null;
     try {
       const raw = storage.getItem(key);
-      state = raw ? validate(JSON.parse(raw)) : validate(seed());
-      if (!raw) storage.setItem(key, JSON.stringify(state));
+      const parsed = raw ? JSON.parse(raw) : seed();
+      state = validate(parsed);
+      scrubRecovery(storage, key, raw ? removedTrash(parsed, state) : []);
+      const canonical = JSON.stringify(state);
+      if (raw !== canonical) storage.setItem(key, canonical);
     } catch (e) {
       loadError = e;
       state = { version: 1, tasks: [], projects: [], notes: {}, trash: [] };
@@ -518,7 +623,13 @@ const Core = (() => {
       const raw = storage.getItem(key);
       if (!raw)
         return { version: 1, tasks: [], projects: [], notes: {}, trash: [] };
-      return validate(JSON.parse(raw));
+      const parsed = JSON.parse(raw), next = validate(parsed), canonical = JSON.stringify(next);
+      if (canonical !== raw) {
+        scrubRecovery(storage, key, removedTrash(parsed, next));
+        storage.setItem(key, canonical);
+        globalThis.HaruCloud?.changed();
+      }
+      return next;
     };
     return {
       get state() {
@@ -533,8 +644,10 @@ const Core = (() => {
             "저장 데이터를 읽지 못했습니다. 원본을 백업한 뒤 백업 파일을 가져와 주세요.",
           );
         const next = read();
+        const previous = { trash: copy(next.trash) };
         fn(next);
         const checked = validate(next);
+        scrubRecovery(storage, key, removedTrash(previous, checked));
         storage.setItem(key, JSON.stringify(checked));
         state = checked;
         globalThis.HaruCloud?.changed();
@@ -553,7 +666,15 @@ const Core = (() => {
       replace(data) {
         const next = validate(data),
           old = storage.getItem(key);
-        if (old) storage.setItem(key + ".recovery", old);
+        if (old) {
+          let recovery = old;
+          try {
+            const backup = validate(JSON.parse(old));
+            removeDeletedRecords(backup, removedTrash(data, next));
+            recovery = JSON.stringify(backup);
+          } catch { /* Keep the original raw data available for manual recovery. */ }
+          storage.setItem(key + ".recovery", recovery);
+        }
         storage.setItem(key, JSON.stringify(next));
         state = next;
         loadError = null;
@@ -576,6 +697,16 @@ const Core = (() => {
     expandRecurrences,
     updateTask,
     moveTask,
+    isFailed,
+    isMissed,
+    isDeferred,
+    setMissedOutcome,
+    TRASH_RETENTION_MS,
+    permanentlyDelete,
+    removeDeletedRecords,
+    removedTrash,
+    scrubRecovery,
+    purgeExpiredTrash,
     moveToTrash,
     restore,
     createStore,

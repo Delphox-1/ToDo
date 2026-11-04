@@ -1,3 +1,4 @@
+import * as maintenance from "./app/api/planner/check/route";
 import * as accountMe from "./app/api/account/me/route";
 import * as planner from "./app/api/planner/route";
 import * as logout from "./app/api/account/logout/route";
@@ -35,6 +36,7 @@ export default {
         "/api/account/logout": [{ method: "POST", handle: logout.POST }],
         "/api/account/delete": [{ method: "POST", handle: removeAccount.POST }],
         "/api/account/google/link": [{ method: "POST", handle: googleLink.POST }],
+        "/api/planner/check": [{ method: "POST", handle: maintenance.POST }],
         "/api/planner": [{ method: "GET", handle: planner.GET }, { method: "PUT", handle: planner.PUT }],
       };
       if (routes[url.pathname]) {

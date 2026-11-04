@@ -350,9 +350,7 @@
       overdue = sortTasks(
         state.tasks.filter(
           (t) =>
-            t.date &&
-            t.date < today() &&
-            t.status !== "done" &&
+            Core.isDeferred(t, today()) &&
             matches(t) &&
             (filter === "all" || t.status === filter),
         ),
@@ -376,7 +374,7 @@
               ? sortTasks(ts)
                   .map(
                     (t) =>
-                      `<span class="strip-task ${t.priority} ${t.status === "done" ? "done" : ""}">${esc(t.title)}</span>`,
+                      `<span class="strip-task ${t.priority} ${scheduledClass(t)}">${scheduledTitle(t)}</span>`,
                   )
                   .join("")
               : '<span class="strip-task-empty">—</span>'
@@ -395,8 +393,17 @@
           : ToDoI18n.html`${month.slice(0, 4)}년 ${Number(month.slice(5))}월`;
     return ToDoI18n.html`<div class="toolbar"><div class="range-control"><button class="icon-button" data-action="prev" aria-label="이전 ${kind === "week" ? ToDoI18n.t("주") : ToDoI18n.t("달")}">${icon("left")}</button><strong>${label}</strong><button class="icon-button" data-action="next" aria-label="다음 ${kind === "week" ? ToDoI18n.t("주") : ToDoI18n.t("달")}">${icon("right")}</button><button class="secondary" data-action="current">오늘</button></div><div class="toolbar-group">${projectSelector()}<select id="status-filter" aria-label="상태 필터"><option value="all">모든 상태</option><option value="todo" ${filter === "todo" ? "selected" : ""}>할 일</option><option value="doing" ${filter === "doing" ? "selected" : ""}>진행 중</option><option value="done" ${filter === "done" ? "selected" : ""}>완료</option></select></div></div>`;
   }
+  function missedChoices(t) {
+    if (!Core.isMissed(t, today())) return "";
+    return `<div class="missed-choices" role="group" aria-label="${esc(t.title)} ${ToDoI18n.t("지난 할 일 처리")}">${[
+      ["failed", ToDoI18n.t("실패")],
+      ["deferred", ToDoI18n.t("미뤄짐")],
+    ].map(([value, label]) => `<label class="missed-choice ${t.missedOutcome === value ? "selected" : ""}"><input type="checkbox" data-missed-task="${esc(t.id)}" value="${value}" ${t.missedOutcome === value ? "checked" : ""}>${label}</label>`).join("")}</div>`;
+  }
+  const scheduledTitle = (t) => esc(t.title) + (Core.isFailed(t) ? ` (${ToDoI18n.t("실패")})` : "");
+  const scheduledClass = (t) => t.status === "done" || Core.isFailed(t) ? "done" : "";
   function weekCard(t) {
-    return `<div class="week-card ${t.status === "done" ? "done" : ""}" draggable="true" data-drag="${esc(t.id)}"><div class="card-top"><button class="check ${t.status === "done" ? "checked" : ""}" data-toggle="${esc(t.id)}" aria-label="${esc(t.title)} ${t.status === "done" ? ToDoI18n.t("완료 취소") : ToDoI18n.t("완료")}">${t.status === "done" ? icon("check") : ""}</button>${priority(t)}</div><button class="task-text" data-edit="${esc(t.id)}"><span class="task-title">${esc(t.title)}</span><span class="task-meta">${t.time ? `<span>${timeLabel(t)}</span>` : ""}${t.status === "doing" ? ToDoI18n.t("<span>진행 중</span>") : ""}</span><span class="task-meta">${pTag(t)}</span></button></div>`;
+    return `<div class="week-card ${scheduledClass(t)}" draggable="true" data-drag="${esc(t.id)}"><div class="card-top"><button class="check ${t.status === "done" ? "checked" : ""}" data-toggle="${esc(t.id)}" aria-label="${esc(t.title)} ${t.status === "done" ? ToDoI18n.t("완료 취소") : ToDoI18n.t("완료")}">${t.status === "done" ? icon("check") : ""}</button>${priority(t)}</div><button class="task-text" data-edit="${esc(t.id)}"><span class="task-title">${scheduledTitle(t)}</span><span class="task-meta">${t.time ? `<span>${timeLabel(t)}</span>` : ""}${t.status === "doing" ? ToDoI18n.t("<span>진행 중</span>") : ""}</span><span class="task-meta">${pTag(t)}</span></button>${missedChoices(t)}</div>`;
   }
   function renderWeek() {
     let visible = state.tasks.filter(
@@ -476,6 +483,12 @@
       });
   }
   document.addEventListener("change", (e) => {
+    if (e.target.dataset.missedTask) {
+      const input = e.target;
+      change((d) => Core.setMissedOutcome(d, input.dataset.missedTask,
+        input.checked ? input.value : "", today()));
+      return;
+    }
     if (e.target.id === "calendar-country") {
       calendarCountry = e.target.value;
       try {
@@ -525,7 +538,7 @@
             .slice(0, limit)
             .map(
               (t) =>
-                ToDoI18n.html`<button class="calendar-event priority-${t.priority} ${t.status === "done" ? "done" : ""}" data-task-detail="${esc(t.id)}" title="${esc(t.title)}${t.time ? " · " + esc(timeLabel(t)) : ""}" aria-label="${esc(t.title)} 상세 보기"><span class="calendar-event-title">${esc(t.title)}</span>${t.time ? `<span class="calendar-time">${esc(t.time)}</span>` : ""}</button>`,
+                ToDoI18n.html`<button class="calendar-event priority-${t.priority} ${scheduledClass(t)}" data-task-detail="${esc(t.id)}" title="${esc(t.title)}${t.time ? " · " + esc(timeLabel(t)) : ""}" aria-label="${esc(t.title)} 상세 보기"><span class="calendar-event-title">${scheduledTitle(t)}</span>${t.time ? `<span class="calendar-time">${esc(t.time)}</span>` : ""}</button>`,
             )
             .join(
               "",
@@ -552,7 +565,7 @@
       `<button class="more-row" ${attribute}><span>${label}</span>${icon(iconName)}</button>`;
     $("#main").innerHTML =
       heading(ToDoI18n.t("더보기")) +
-      ToDoI18n.html`<section class="more-section"><h2>관리</h2>${row(ToDoI18n.t("프로젝트"), 'data-view="projects"', "folder")}${row(ToDoI18n.t("새 프로젝트"), 'data-action="new-project"', "plus")}${row(ToDoI18n.t("완료한 일"), 'data-view="completed"', "check")}${row(ToDoI18n.t("휴지통"), 'data-view="trash"')}</section><section class="more-section"><h2>데이터</h2><button class="more-row" data-action="storage-info"><span>로컬 저장<small id="more-sync-status">${esc(globalThis.HaruCloud?.status || ToDoI18n.t("기기에 저장됨"))}</small></span>${icon("right")}</button>${row(ToDoI18n.t("백업 내려받기"), 'data-action="export"', "download")}${row(ToDoI18n.t("백업 가져오기"), 'data-action="import"', "upload")}${row(ToDoI18n.t("가져오기 전 백업"), 'data-action="export-recovery"')}${state.tasks.some((t) => t.sample) || state.projects.some((p) => p.sample) ? row(ToDoI18n.t("예시 데이터 지우기"), 'data-action="clear-samples"') : ""}</section><section class="more-section"><h2>ToDo</h2>${!(matchMedia("(display-mode: standalone)").matches || navigator.standalone) ? row(ToDoI18n.t("앱 설치 안내"), 'data-action="install"') : ""}<p class="more-note">현재 브라우저에 저장 · 다른 기기로 옮길 때는 백업 파일 사용</p></section>`;
+      ToDoI18n.html`<section class="more-section"><h2>관리</h2>${row(ToDoI18n.t("프로젝트"), 'data-view="projects"', "folder")}${row(ToDoI18n.t("새 프로젝트"), 'data-action="new-project"', "plus")}${row(ToDoI18n.t("완료한 일"), 'data-view="completed"', "check")}${row(ToDoI18n.t("휴지통"), 'data-view="trash"')}${row(ToDoI18n.t("데이터베이스 검사"), 'data-action="database-check"')}</section><section class="more-section"><h2>데이터</h2><button class="more-row" data-action="storage-info"><span>로컬 저장<small id="more-sync-status">${esc(globalThis.HaruCloud?.status || ToDoI18n.t("기기에 저장됨"))}</small></span>${icon("right")}</button>${row(ToDoI18n.t("백업 내려받기"), 'data-action="export"', "download")}${row(ToDoI18n.t("백업 가져오기"), 'data-action="import"', "upload")}${row(ToDoI18n.t("가져오기 전 백업"), 'data-action="export-recovery"')}${state.tasks.some((t) => t.sample) || state.projects.some((p) => p.sample) ? row(ToDoI18n.t("예시 데이터 지우기"), 'data-action="clear-samples"') : ""}</section><section class="more-section"><h2>ToDo</h2>${!(matchMedia("(display-mode: standalone)").matches || navigator.standalone) ? row(ToDoI18n.t("앱 설치 안내"), 'data-action="install"') : ""}<p class="more-note">현재 브라우저에 저장 · 다른 기기로 옮길 때는 백업 파일 사용</p></section>`;
   }
   function renderProjects() {
     let ps = state.projects.filter(
@@ -916,15 +929,10 @@
   function restoreItem(id) {
     change((d) => Core.restore(d, id), ToDoI18n.t("복원했습니다."));
   }
+  const trashView = ToDoTrashView.create({ document, i18n: ToDoI18n, esc, heading, empty });
+  const selectedTrashIds = trashView.selected;
   function renderTrash() {
-    const items = [...state.trash]
-      .reverse()
-      .filter(
-        (x) => !query || x.label.toLowerCase().includes(query.toLowerCase()),
-      );
-    $("#main").innerHTML =
-      heading(ToDoI18n.t("휴지통")) +
-      ToDoI18n.html`<section class="panel list-panel"><div class="panel-heading"><h2>삭제한 항목<span>${items.length}개</span></h2></div>${items.map((item) => ToDoI18n.html`<div class="task-row"><div class="task-text"><span class="task-title">${esc(item.label)}</span><span class="task-meta">${new Date(item.deletedAt).toLocaleDateString(ToDoI18n.locale)} · 할 일 ${item.tasks.length}개${item.projects.length ? ToDoI18n.html` · 프로젝트 ${item.projects.length}개` : ""}</span></div><button class="secondary" data-restore="${esc(item.id)}">복원</button></div>`).join("") || empty(ToDoI18n.t("삭제한 항목이 없습니다."))}</section>`;
+    trashView.render(state, query);
   }
   function toggleTask(id) {
     change((d) => {
@@ -1132,6 +1140,21 @@
       return;
     }
     const action = b.dataset.action;
+    if (action === "restore-selected") {
+      const ids = [...selectedTrashIds];
+      change((d) => { for (const id of ids) if (d.trash.some((x) => x.id === id)) Core.restore(d, id); }, ToDoI18n.t("복원했습니다."));
+      return;
+    }
+    if (action === "delete-selected-trash" || action === "empty-trash") {
+      const ids = action === "empty-trash" ? state.trash.map((x) => x.id) : [...selectedTrashIds];
+      if (!ids.length) return;
+      if (await confirmAction(
+        ToDoI18n.t(action === "empty-trash" ? "휴지통을 비울까요?" : "선택한 항목을 영구 삭제할까요?"),
+        `${ids.length}${ToDoI18n.t("개 항목이 영구 삭제되며 복원할 수 없습니다.")}`,
+      )) change((d) => Core.permanentlyDelete(d, ids), ToDoI18n.t("영구 삭제했습니다."));
+      return;
+    }
+
     if (action === "storage-info") toast(ToDoI18n.t("이 브라우저에 저장됩니다. 백업 파일로 다른 기기에 옮길 수 있어요."));
     if (action === "add") openTask();
     if (action === "new-project") openProject();
@@ -1236,6 +1259,21 @@
     if (action === "import") $("#import-file").click();
   });
   document.addEventListener("change", (e) => {
+    if (e.target.id === "trash-select-all") {
+      for (const input of $$("[data-trash-select]")) {
+        if (e.target.checked) selectedTrashIds.add(input.dataset.trashSelect);
+        else selectedTrashIds.delete(input.dataset.trashSelect);
+      }
+      renderTrash();
+      return;
+    }
+    if (e.target.dataset.trashSelect) {
+      const id = e.target.dataset.trashSelect;
+      if (e.target.checked) selectedTrashIds.add(id);
+      else selectedTrashIds.delete(id);
+      renderTrash();
+      return;
+    }
     if (e.target.id === "project-filter") {
       projectFilter = e.target.value;
       render();
@@ -1383,6 +1421,12 @@
   });
   let seenDay = today();
   function refreshDay() {
+    if (!storageFailed && state.trash.some((x) => Date.now() - Date.parse(x.deletedAt) >= Core.TRASH_RETENTION_MS)) {
+      try {
+        state = persistence.reload();
+        renderPreservingNote();
+      } catch (error) { failure(error); }
+    }
     if (today() !== seenDay) {
       const old = seenDay;
       seenDay = today();

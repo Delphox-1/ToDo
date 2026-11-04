@@ -57,7 +57,7 @@ try {
     assert.ok(page.includes("/planner/i18n-core.js") && page.includes("/planner/i18n.js"));
     for(const [,asset] of page.matchAll(/(?:src|href)="(\/[^"#?]+\.(?:css|js))"/g)) assert.equal((await anonymous.call(asset)).status,200,asset);
   }
-  for(const name of ["holidays","core","merge","cloud","app","install"]) assert.equal((await anonymous.call("/planner/"+name+".js")).status,200,name);
+  for(const name of ["holidays","core","merge","cloud","trash-view","app","install","maintenance"]) assert.equal((await anonymous.call("/planner/"+name+".js")).status,200,name);
   assert.equal((await a.call("/api/account/logout",{}, {Origin:"https://untrusted.example"})).status,403,"cross-origin logout is rejected");
   assert.equal((await a.call("/api/account/logout",{}, {"X-ToDo-Account":b.id})).status,409,"stale tabs cannot log out the wrong account");
   assert.equal((await a.call("/api/auth/unlink-account",{})).status,403,"unguarded unlink requests are blocked");
@@ -74,6 +74,15 @@ try {
   assert.equal((await a.put({...state,tasks:[null]},updated.data.revision)).status,400,"invalid model data cannot replace saved plans");
   assert.equal((await a.call("/api/planner")).data.state.notes["2026-11-03"],"Phone fixture note");
   assert.equal((await b.call("/api/planner")).data.state,null,"other accounts cannot read the plans");
+  assert.equal((await anonymous.call("/api/planner/check",{})).status,401);
+  assert.equal((await a.call("/api/planner/check",{}, {Origin:"https://untrusted.example"})).status,403);
+  assert.equal((await a.call("/api/planner/check",{}, {"X-ToDo-Account":b.id})).status,401);
+  const inspected=await a.call("/api/planner/check",{});
+  assert.equal(inspected.status,200,JSON.stringify(inspected.data));
+  assert.equal(inspected.data.ok,true);assert.equal(inspected.data.notes,1);
+  assert.equal((await a.call("/api/planner")).data.state.notes["2026-11-03"],"Phone fixture note");
+  assert.equal((await b.call("/api/planner")).data.state,null);
+
   assert.equal((await a.put(state,1)).status,409,"stale writes do not overwrite newer data");
   assert.equal((await a.call("/api/planner",undefined,{"X-ToDo-Account":b.id})).status,401,"stale tabs cannot read the new account's records");
   assert.equal((await a.call("/api/auth/link-social",{provider:"google"})).status,403,"linking requires the guarded account endpoint");
