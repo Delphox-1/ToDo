@@ -19,26 +19,8 @@
   const Core = HaruCore;
   const key = globalThis.ToDoAccount?.storageKey || "haru-planner-v1",
     uid = () => crypto.randomUUID(),
-    dayNames = [ToDoI18n.t("일"), ToDoI18n.t("월"), ToDoI18n.t("화"), ToDoI18n.t("수"), ToDoI18n.t("목"), ToDoI18n.t("금"), ToDoI18n.t("토")];
-  const dateKey = (d) =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  const parseDate = (s) => new Date(s + "T12:00:00"),
-    addDays = (s, n) => {
-      let d = parseDate(s);
-      d.setDate(d.getDate() + n);
-      return dateKey(d);
-    },
-    today = () => dateKey(new Date());
-  const weekStart = (s) => {
-    let d = parseDate(s);
-    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
-    return dateKey(d);
-  };
-  const friendly = (s) => {
-    if (!s) return ToDoI18n.t("날짜 미정");
-    let d = parseDate(s);
-    return `${d.getMonth() + 1}${ToDoI18n.language === "ja" ? "/" : "."}${d.getDate()} (${dayNames[d.getDay()]})`;
-  };
+    dates = ToDoDateTools.create(ToDoI18n);
+  const {dayNames,dateKey,parseDate,addDays,today,weekStart,friendly} = dates;
   let state,
     view = "today",
     query = "",
@@ -51,131 +33,7 @@
     selectedDate = null,
     toastTimer,
     sortMode = "date";
-  function samples() {
-    if (globalThis.ToDoAccount)
-      return { version: 1, tasks: [], projects: [], notes: {}, trash: [] };
-    const t = today();
-    return {
-      version: 1,
-      projects: [
-        {
-          id: "p-work",
-          name: "업무 & 사이드 프로젝트",
-          color: "#6c7de0",
-          sample: true,
-        },
-        { id: "p-life", name: "나의 일상", color: "#44876e", sample: true },
-        { id: "p-learn", name: "배움과 성장", color: "#d1954d", sample: true },
-      ],
-      notes: {},
-      tasks: [
-        {
-          id: uid(),
-          title: "이번 주 가장 중요한 목표 정하기",
-          date: t,
-          time: "09:00",
-          priority: "high",
-          project: "p-work",
-          status: "done",
-          star: true,
-          notes: "예시 할 일이에요. 자유롭게 수정하거나 지워보세요.",
-          repeat: "none",
-          sample: true,
-        },
-        {
-          id: uid(),
-          title: "새 프로젝트 아이디어 정리하기",
-          date: t,
-          time: "10:00",
-          priority: "high",
-          project: "p-work",
-          status: "doing",
-          star: true,
-          notes: "아이디어 3개를 적고, 가장 해보고 싶은 하나를 골라보세요.",
-          repeat: "none",
-          sample: true,
-        },
-        {
-          id: uid(),
-          title: "책 20페이지 읽고 한 줄 남기기",
-          date: t,
-          time: "13:00",
-          priority: "medium",
-          project: "p-learn",
-          status: "todo",
-          star: true,
-          notes: "오늘 배운 것 한 가지는 무엇인가요?",
-          repeat: "none",
-          sample: true,
-        },
-        {
-          id: uid(),
-          title: "가볍게 산책하며 리프레시",
-          date: t,
-          time: "17:30",
-          priority: "low",
-          project: "p-life",
-          status: "todo",
-          star: false,
-          notes: "",
-          repeat: "none",
-          sample: true,
-        },
-        {
-          id: uid(),
-          title: "다음 주 일정 미리 살펴보기",
-          date: t,
-          time: "20:00",
-          priority: "medium",
-          project: "p-life",
-          status: "todo",
-          star: false,
-          notes: "",
-          repeat: "none",
-          sample: true,
-        },
-        {
-          id: uid(),
-          title: "프로젝트 초안 작성",
-          date: addDays(t, 2),
-          time: "10:00",
-          priority: "high",
-          project: "p-work",
-          status: "todo",
-          star: false,
-          notes: "",
-          repeat: "none",
-          sample: true,
-        },
-        {
-          id: uid(),
-          title: "온라인 강의 한 편 듣기",
-          date: addDays(t, 3),
-          time: "19:00",
-          priority: "medium",
-          project: "p-learn",
-          status: "todo",
-          star: false,
-          notes: "",
-          repeat: "none",
-          sample: true,
-        },
-        {
-          id: uid(),
-          title: "언젠가 해보고 싶은 일 적기",
-          date: "",
-          time: "",
-          priority: "low",
-          project: "p-life",
-          status: "todo",
-          star: false,
-          notes: "",
-          repeat: "none",
-          sample: true,
-        },
-      ],
-    };
-  }
+  const samples = ToDoSamples.create({today,uid,addDays});
   const persistence = Core.createStore(localStorage, key, samples);
   state = persistence.state;
   let storageFailed = !!persistence.error;
@@ -393,18 +251,7 @@
           : ToDoI18n.html`${month.slice(0, 4)}년 ${Number(month.slice(5))}월`;
     return ToDoI18n.html`<div class="toolbar"><div class="range-control"><button class="icon-button" data-action="prev" aria-label="이전 ${kind === "week" ? ToDoI18n.t("주") : ToDoI18n.t("달")}">${icon("left")}</button><strong>${label}</strong><button class="icon-button" data-action="next" aria-label="다음 ${kind === "week" ? ToDoI18n.t("주") : ToDoI18n.t("달")}">${icon("right")}</button><button class="secondary" data-action="current">오늘</button></div><div class="toolbar-group">${projectSelector()}<select id="status-filter" aria-label="상태 필터"><option value="all">모든 상태</option><option value="todo" ${filter === "todo" ? "selected" : ""}>할 일</option><option value="doing" ${filter === "doing" ? "selected" : ""}>진행 중</option><option value="done" ${filter === "done" ? "selected" : ""}>완료</option></select></div></div>`;
   }
-  function missedChoices(t) {
-    if (!Core.isMissed(t, today())) return "";
-    return `<div class="missed-choices" role="group" aria-label="${esc(t.title)} ${ToDoI18n.t("지난 할 일 처리")}">${[
-      ["failed", ToDoI18n.t("실패")],
-      ["deferred", ToDoI18n.t("미뤄짐")],
-    ].map(([value, label]) => `<label class="missed-choice ${t.missedOutcome === value ? "selected" : ""}"><input type="checkbox" data-missed-task="${esc(t.id)}" value="${value}" ${t.missedOutcome === value ? "checked" : ""}>${label}</label>`).join("")}</div>`;
-  }
-  const scheduledTitle = (t) => esc(t.title) + (Core.isFailed(t) ? ` (${ToDoI18n.t("실패")})` : "");
-  const scheduledClass = (t) => t.status === "done" || Core.isFailed(t) ? "done" : "";
-  function weekCard(t) {
-    return `<div class="week-card ${scheduledClass(t)}" draggable="true" data-drag="${esc(t.id)}"><div class="card-top"><button class="check ${t.status === "done" ? "checked" : ""}" data-toggle="${esc(t.id)}" aria-label="${esc(t.title)} ${t.status === "done" ? ToDoI18n.t("완료 취소") : ToDoI18n.t("완료")}">${t.status === "done" ? icon("check") : ""}</button>${priority(t)}</div><button class="task-text" data-edit="${esc(t.id)}"><span class="task-title">${scheduledTitle(t)}</span><span class="task-meta">${t.time ? `<span>${timeLabel(t)}</span>` : ""}${t.status === "doing" ? ToDoI18n.t("<span>진행 중</span>") : ""}</span><span class="task-meta">${pTag(t)}</span></button>${missedChoices(t)}</div>`;
-  }
+  const {missedChoices,scheduledTitle,scheduledClass,weekCard} = ToDoScheduleView.create({Core,ToDoI18n,esc,today,icon,priority,timeLabel,pTag});
   function renderWeek() {
     let visible = state.tasks.filter(
         (t) => matches(t) && (filter === "all" || t.status === filter),

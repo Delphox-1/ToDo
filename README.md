@@ -201,3 +201,5 @@ npm test
 ```
 
 브라우저 코드는 `public/planner/`, 로컬 서버는 `scripts/local-server.mjs`에 있습니다. 일정 데이터는 저장소에 포함되지 않습니다.
+
+[코드 구조 및 수정 안내 / Code structure](docs/CODE_STRUCTURE.md)

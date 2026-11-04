@@ -201,3 +201,5 @@ npm test
 ```
 
 ブラウザー側のコードは `public/planner/`、ローカルサーバーは `scripts/local-server.mjs` にあります。個人の予定データはリポジトリに含まれていません。
+
+[코드 구조 및 수정 안내 / Code structure](CODE_STRUCTURE.md)

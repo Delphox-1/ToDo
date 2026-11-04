@@ -36,7 +36,8 @@ test('item labels are escaped in checkbox attributes and rendered text',()=>{
 test('shared schedule labels escape user titles and completed tasks cannot display a stale failure',()=>{
  const context={Core:require('../lib/planner-core.cjs'),ToDoI18n:require('./helpers/locale.cjs').create('ko'),esc:s=>s.replace(/</g,'&lt;').replace(/>/g,'&gt;')};
  vm.createContext(context);
- vm.runInContext(app.slice(app.indexOf('  const scheduledTitle ='),app.indexOf('  function weekCard')),context);
+ vm.runInContext(fs.readFileSync('public/planner/schedule-view.js','utf8'),context);
+ vm.runInContext('const {scheduledTitle,scheduledClass}=ToDoScheduleView.create({Core,ToDoI18n,esc})',context);
  for(const [status,outcome,label,style] of [['todo','failed','면접 (실패)','done'],['done','failed','면접','done'],['todo','deferred','면접','']]) {
   context.task={title:'면접',status,missedOutcome:outcome};
   assert.equal(vm.runInContext('scheduledTitle(task)',context),label);

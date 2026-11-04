@@ -57,7 +57,7 @@ try {
     assert.ok(page.includes("/planner/i18n-core.js") && page.includes("/planner/i18n.js"));
     for(const [,asset] of page.matchAll(/(?:src|href)="(\/[^"#?]+\.(?:css|js))"/g)) assert.equal((await anonymous.call(asset)).status,200,asset);
   }
-  for(const name of ["holidays","core","merge","cloud","trash-view","app","install","maintenance"]) assert.equal((await anonymous.call("/planner/"+name+".js")).status,200,name);
+  for(const name of ["holidays","core","merge","cloud","trash-view","date-tools","sample-data","schedule-view","app","install","maintenance"]) assert.equal((await anonymous.call("/planner/"+name+".js")).status,200,name);
   assert.equal((await a.call("/api/account/logout",{}, {Origin:"https://untrusted.example"})).status,403,"cross-origin logout is rejected");
   assert.equal((await a.call("/api/account/logout",{}, {"X-ToDo-Account":b.id})).status,409,"stale tabs cannot log out the wrong account");
   assert.equal((await a.call("/api/auth/unlink-account",{})).status,403,"unguarded unlink requests are blocked");

@@ -201,3 +201,5 @@ npm test
 ```
 
 Browser code lives in `public/planner/`, and the local server is `scripts/local-server.mjs`. Personal planner data is not included in this repository.
+
+[코드 구조 및 수정 안내 / Code structure](CODE_STRUCTURE.md)
