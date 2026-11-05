@@ -77,18 +77,20 @@
         .toLowerCase()
         .includes(query.toLowerCase())) &&
     (!projectFilter || t.project === projectFilter);
+  const priorityRank = { high: 0, medium: 1, low: 2 };
+  const isUntimedHigh = (task) => task.priority === "high" && !task.time;
   const sortTasks = (ts) =>
     [...ts].sort(
       (a, b) =>
         (a.status === "done") - (b.status === "done") ||
         (sortMode === "priority"
-          ? { high: 0, medium: 1, low: 2 }[a.priority] -
-            { high: 0, medium: 1, low: 2 }[b.priority]
+          ? priorityRank[a.priority] - priorityRank[b.priority]
           : 0) ||
         (a.date || "9999").localeCompare(b.date || "9999") ||
+        // Within each day, untimed high-priority tasks come first.
+        isUntimedHigh(b) - isUntimedHigh(a) ||
         (a.time || "99").localeCompare(b.time || "99") ||
-        { high: 0, medium: 1, low: 2 }[a.priority] -
-          { high: 0, medium: 1, low: 2 }[b.priority],
+        priorityRank[a.priority] - priorityRank[b.priority],
     );
   function taskRow(t, showDate = false) {
     return ToDoI18n.html`<div class="task-row ${t.status === "done" ? "done" : ""}"><button class="check ${t.status === "done" ? "checked" : ""}" data-toggle="${esc(t.id)}" aria-label="${esc(t.title)} ${t.status === "done" ? ToDoI18n.t("완료 취소") : ToDoI18n.t("완료")}">${t.status === "done" ? icon("check") : ""}</button><button class="task-text" data-edit="${esc(t.id)}"><span class="task-title">${esc(t.title)}</span><span class="task-meta">${showDate ? `<span>${friendly(t.date)}</span>` : ""}${t.time ? `<span>${timeLabel(t)}</span>` : ""}${pTag(t)}${t.dueDate ? `<span class="deadline-tag">${deadlineLabel(t)}</span>` : ""}${t.status === "doing" ? ToDoI18n.t("<span>진행 중</span>") : ""}${t.repeat !== "none" ? `<span>↻ ${repeatLabel(t)}</span>` : ""}</span></button>${priority(t)}<button class="task-edit" data-edit="${esc(t.id)}" aria-label="${esc(t.title)} 수정" title="수정 및 삭제">수정</button><button class="star ${t.star ? "on" : ""}" data-star="${esc(t.id)}" aria-label="${t.star ? ToDoI18n.t("중요 표시 해제") : ToDoI18n.t("중요한 일로 표시")}" aria-pressed="${t.star}">${icon("star")}</button></div>`;
